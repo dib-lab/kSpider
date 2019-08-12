@@ -88,6 +88,34 @@ int main(int argc, char **argv) {
 
     }
 
+    //     // Exporting superColors
+
+    // for (auto &superColor : VQ.superColors) {
+    //     int Q = superColor.first;
+    //     cout << "Q" << Q << endl;
+    //     for (auto const &color : superColor.second) {
+    //         uint64_t supercolor_id = color.first;
+    //         cout << supercolor_id << ": ";
+    //         for (auto const &c : color.second) {
+    //             cout << c << ", ";
+    //         }
+    //         cout << endl;
+    //     }
+    //     cout << endl;
+    // }
+    // cout << "---------------\nCount: \n";
+
+    // for (auto &superColor : VQ.superColorsCount) {
+    //     int Q = superColor.first;
+    //     cout << "Q" << Q << endl;
+    //     for (auto const &color : superColor.second) {
+    //         uint64_t supercolor_id = color.first;
+    //         cout << supercolor_id << ": " << color.second;
+    //         cout << endl;
+    //     }
+    //     cout << endl;
+    // }
+
 
     return EXIT_SUCCESS;
 }
