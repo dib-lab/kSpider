@@ -1,24 +1,93 @@
-#include "kCluster.hpp"
+#include "virtualQs.hpp"
 #include <iostream>
 #include "stdint.h"
+#include "argh.h"
 
-int main(int argc, char ** argv){
+int main(int argc, char **argv) {
 
-    std::cout << "Hello World" << std::endl;
+    // TODO: Finish the aguments parsing later.
+    // TODO: Change the Qs sys args input for excluding written Qs.
 
-    kDataFrame *KF = kDataFrame::load(argv[1]);
+    int minQ, maxQ, stepQ;
+    string index_prefix;
 
-    auto it = KF->begin();
-    uint64_t kmer;
-    uint64_t color;
+    argh::parser cmdl(argv);
 
-    while (it != KF->end()){
-        kmer = it.getHashedKmer();
-        color = it.getKmerCount();
+    cmdl({"-m", "--min-q"}) >> minQ;
+    cmdl({"-M", "--max-q"}) >> maxQ;
+    cmdl({"-s", "--step-q"}) >> stepQ;
+    cmdl({"-i", "--idx"}) >> index_prefix;
+
+    // Arguments parsing ----------------------------
+
+    virtualQs VQ = virtualQs(index_prefix, minQ, maxQ, stepQ);
+
+    auto it = VQ.KF->begin();
+
+    uint64_t prev_kmer = it.getHashedKmer();
+    uint64_t prev_kmer_color = it.getKmerCount();
+    uint64_t XOR;
+    uint64_t curr_kmer;
+    uint64_t curr_kmer_color;
+
+    bool matched;
+
+    while (it != VQ.KF->end()) {
         it++;
+        curr_kmer = it.getHashedKmer();
+        curr_kmer_color = it.getKmerCount();
+        XOR = prev_kmer xor curr_kmer;
+
+        for (auto const &mask : VQ.masks) {
+            int Q = mask.first;
+            matched = !(bool) (XOR & mask.second);
+
+            if (matched) {
+                VQ.temp_superColors[Q].insert(prev_kmer_color);
+                VQ.temp_superColors[Q].insert(curr_kmer_color);
+            } else {
+                VQ.temp_superColors[Q].insert(prev_kmer_color);
+                uint64_t super_color_id = VQ.create_super_color(VQ.temp_superColors[Q]);
+                bool super_color_exist = (VQ.superColors[Q].find(super_color_id) != VQ.superColors[Q].end());
+
+                if (super_color_exist) {
+                    VQ.superColorsCount[Q][super_color_id]++;
+                } else {
+                    VQ.superColors[Q][super_color_id] = VQ.temp_superColors[Q];
+                    VQ.superColorsCount[Q][super_color_id] = 1;
+                }
+
+                VQ.temp_superColors[Q].clear();
+                VQ.temp_superColors[Q].insert(curr_kmer_color);
+            }
+
+        }
+
+
+        prev_kmer = curr_kmer;
+        prev_kmer_color = curr_kmer_color;
+
     }
 
-    std::cout << KF->ksize() << std::endl;
+    for (auto &superColor : VQ.temp_superColors) {
+        int Q = superColor.first;
+        superColor.second.erase(curr_kmer_color);
+        if (superColor.second.empty()) {
+            continue;
+        }
 
-    return 0;
+        uint64_t super_color_id = VQ.create_super_color(superColor.second);
+        bool super_color_exist = (VQ.superColors[Q].find(super_color_id) != VQ.superColors[Q].end());
+
+        if (super_color_exist) {
+            VQ.superColorsCount[Q][super_color_id]++;
+        } else {
+            VQ.superColors[Q][super_color_id] = VQ.temp_superColors[Q];
+            VQ.superColorsCount[Q][super_color_id] = 1;
+        }
+
+    }
+
+
+    return EXIT_SUCCESS;
 }
