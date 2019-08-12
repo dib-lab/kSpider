@@ -88,6 +88,19 @@ int main(int argc, char **argv) {
 
     }
 
+    cerr << "[INFO] constructing pairwise matrix" << endl;
+    VQ.pairwise();
+
+//    for (auto const &edge : VQ.edges) {
+//        for (auto const &Q : edge.second) {
+//            cout << "seq(" << VQ.namesMap[edge.first] << "," << VQ.namesMap[Q.first] << "): ";
+//            for (auto const &val : Q.second) {
+//                cout << "Q" << (int)val.first << ": " << (int)val.second << ", ";
+//            } cout << endl;
+//        }
+//        cout << endl << endl;
+//    }
+
     //     // Exporting superColors
 
     // for (auto &superColor : VQ.superColors) {
