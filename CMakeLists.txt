@@ -22,6 +22,10 @@ include_directories (${kProcessor_INCLUDE_PATH})
 # END kProcessor Setup
 # ----------------------------------------------------------------------------
 
+include_directories("${PROJECT_SOURCE_DIR}/lib/argh")
+
+set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/parallel-hashmap")
+include_directories("${PHMAP_INCLUDE_DIRS}")
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++14 -fPIC -fopenmp -W -pedantic -O3 -Ofast")
 
@@ -29,7 +33,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++14 -fPIC -fopenmp
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SEQAN_CXX_FLAGS}")
 
 file(GLOB SOURCES
-        "${PROJECT_SOURCE_DIR}/src/kCluster.cpp"
+        "${PROJECT_SOURCE_DIR}/src/*"
         "${PROJECT_SOURCE_DIR}/main.cpp"
         )
 
@@ -41,3 +45,4 @@ include_directories(${kCluster_INCLUDE_DIRS})
 add_executable (kCluster ${SOURCES})
 
 target_link_libraries (kCluster kProcessor)
+target_include_directories(kCluster INTERFACE ${PHMAP_INCLUDE_DIRS} ${kProcessor_INCLUDE_PATH})
