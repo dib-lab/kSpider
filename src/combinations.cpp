@@ -15,10 +15,7 @@ void Combo::comb(int n, int r, int *arr) {
             comb(i - 1, r - 1, arr);
 
         } else {
-            if(arr[0] > arr[1])
-                this->combs.emplace_back(std::make_pair(arr[0] - 1, arr[1] - 1));
-            else
-                this->combs.emplace_back(std::make_pair(arr[1] - 1, arr[0] - 1));
+            this->combs.emplace_back(std::make_pair(arr[0] - 1, arr[1] - 1));
         }
     }
 }
