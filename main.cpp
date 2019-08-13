@@ -92,14 +92,11 @@ int main(int argc, char **argv) {
     VQ.pairwise();
 
 //    for (auto const &edge : VQ.edges) {
-//        for (auto const &Q : edge.second) {
-//            cout << "seq(" << VQ.namesMap[edge.first] << "," << VQ.namesMap[Q.first] << "): ";
-//            for (auto const &val : Q.second) {
-//                cout << "Q" << (int)val.first << ": " << (int)val.second << ", ";
-//            } cout << endl;
-//        }
-//        cout << endl << endl;
+//        cout << "seq(" << edge.first.first.first << "," << edge.first.first.second << "): ";
+//        cout << "Q" << (int)edge.first.second << " = " << edge.second << endl;
 //    }
+
+
 
     //     // Exporting superColors
 
