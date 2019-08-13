@@ -54,15 +54,14 @@ virtualQs::virtualQs(string index_prefix, uint8_t minQ, uint8_t maxQ, uint8_t st
 
     // Read NamesMap
 
-    ifstream namesMapIn(index_prefix+".namesMap");
-    namesMapIn>>size;
-    for(int i=0;i<size;i++)
-    {
-        uint32_t sample_id;
-        string sample_name;
-        namesMapIn>>sample_id>>sample_name;
-        this->namesMap[sample_id] = sample_name;
-    }
+//    ifstream namesMapIn(index_prefix + ".namesMap");
+//    namesMapIn >> size;
+//    for (int i = 0; i < size; i++) {
+//        uint32_t sample_id;
+//        string sample_name;
+//        namesMapIn >> sample_id >> sample_name;
+//        this->namesMap[sample_id] = sample_id;
+//    }
 
 }
 
@@ -100,8 +99,6 @@ void virtualQs::calculate_kmers_number() {
 void virtualQs::pairwise() {
     this->calculate_kmers_number();
     Combo combo = Combo();
-
-
     for (auto const &Q : this->mainQs) {
         cerr << "Processing Q: " << Q << endl;
         for (auto const &superColor : this->superColors[Q]) {
@@ -115,23 +112,8 @@ void virtualQs::pairwise() {
             for (auto const &seq_pair : combo.combs) {
                 uint32_t _seq1 = tr_ids[seq_pair.first];
                 uint32_t _seq2 = tr_ids[seq_pair.second];
-
-                if(_seq1 > _seq2)
-                    this->edges[_seq1][_seq2][Q] += color_count;
-                else
-                    this->edges[_seq2][_seq1][Q] += color_count;
-
-
-//                bool pair_exist = (this->edges.find(seq_pair) != this->edges.end());
-//                if (pair_exist) {
-//                    this->edges[seq_pair][Q] += color_count;
-//                } else {
-//                    this->edges[seq_pair] = flat_hash_map<uint8_t, uint32_t>();
-//                    for (auto const &_Q : this->mainQs) {
-//                        this->edges[seq_pair][_Q] = 0;
-//                    }
-//                    this->edges[seq_pair][Q] = color_count;
-//                }
+                _seq1 > _seq2 ? this->edges[{{_seq1, _seq2}, Q}] += color_count : this->edges[{{_seq2, _seq1},
+                                                                                               Q}] += color_count;
             }
         }
 
