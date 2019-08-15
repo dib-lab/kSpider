@@ -43,7 +43,7 @@ set(kCluster_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 include_directories(${kCluster_INCLUDE_DIRS})
 
-add_executable (kCluster ${SOURCES} src/combinations.cpp)
+add_executable (kCluster_pairwise ${SOURCES} src/combinations.cpp)
 
-target_link_libraries (kCluster kProcessor sqlite3)
-target_include_directories(kCluster INTERFACE ${PHMAP_INCLUDE_DIRS} ${kProcessor_INCLUDE_PATH})
+target_link_libraries (kCluster_pairwise kProcessor sqlite3)
+target_include_directories(kCluster_pairwise INTERFACE ${PHMAP_INCLUDE_DIRS} ${kProcessor_INCLUDE_PATH})
