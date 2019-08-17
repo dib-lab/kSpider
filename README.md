@@ -26,6 +26,6 @@ STEP_Q=5
 
 INDEX_PREFIX=idx_seq
 
-./kCluster --min-q=${MIN_Q} --max-q=${MAX_Q} --step-q=${STEP_Q} --idx=${INDEX_PREFIX}
+./kCluster_pairwise --min-q=${MIN_Q} --max-q=${MAX_Q} --step-q=${STEP_Q} --idx=${INDEX_PREFIX}
 
 ```
