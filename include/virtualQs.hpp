@@ -4,7 +4,6 @@
 #include <vector>
 #include <string>
 #include <set>
-#include <sqlite3.h>
 #include <boost/functional/hash.hpp>
 
 using phmap::flat_hash_map;
@@ -54,7 +53,7 @@ public:
 
     void pairwise();
 
-    void export_to_sqlite();
+    // void export_to_sqlite();
     void export_to_tsv();
 
 };

@@ -4,7 +4,7 @@
 #include "combinations.hpp"
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
-#include <sqlite3.h>
+// #include <sqlite3.h>
 using boost::adaptors::transformed;
 using boost::algorithm::join;
 using std::cerr;
@@ -194,6 +194,7 @@ void virtualQs::export_to_tsv(){
     myfile.close();
 }
 
+/*
 void virtualQs::export_to_sqlite() {
     this->superColors.clear();
     this->superColorsCount.clear();
@@ -247,3 +248,5 @@ void virtualQs::export_to_sqlite() {
     sqlite3_exec(this->DB, "END TRANSACTION", NULL, NULL, &this->DB_ErrMsg);
     sqlite3_close(this->DB);
 }
+
+*/

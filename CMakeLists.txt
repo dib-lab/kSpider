@@ -45,5 +45,6 @@ include_directories(${kCluster_INCLUDE_DIRS})
 
 add_executable (kCluster_pairwise ${SOURCES} src/combinations.cpp)
 
-target_link_libraries (kCluster_pairwise kProcessor sqlite3)
+#target_link_libraries (kCluster_pairwise kProcessor sqlite3)
+target_link_libraries (kCluster_pairwise kProcessor)
 target_include_directories(kCluster_pairwise INTERFACE ${PHMAP_INCLUDE_DIRS} ${kProcessor_INCLUDE_PATH})
