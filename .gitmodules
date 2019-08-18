@@ -1,7 +1,3 @@
-[submodule "lib/kProcessor"]
-	path = lib/kProcessor
-	url = https://github.com/dib-lab/kProcessor.git
-	branch = devel
 [submodule "lib/parallel-hashmap"]
 	path = lib/parallel-hashmap
 	url = https://github.com/greg7mdp/parallel-hashmap
