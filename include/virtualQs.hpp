@@ -36,7 +36,7 @@ public:
     flat_hash_map<uint64_t, vector<uint32_t>> color_to_ids;
 //    flat_hash_map<uint32_t, uint32_t> namesMap;
 
-    sqlite3 *DB;
+    // sqlite3 *DB;
     char *DB_ErrMsg = 0;
 
     set<int > mainQs;

@@ -20,13 +20,13 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
     // Load the sqlite DB
     // TODO assert file exist before trying to load.
 
-    string sqlite_file = index_prefix + "_kCluster.sqlite";
-    int rc;
-    rc = sqlite3_open(sqlite_file.c_str(), &this->DB);
-    if(rc) {
-        fprintf(stderr, "Can't open ths sqlite database: %s\n", sqlite3_errmsg(this->DB));
-        exit(0);
-    }
+    // string sqlite_file = index_prefix + "_kCluster.sqlite";
+    // int rc;
+    // rc = sqlite3_open(sqlite_file.c_str(), &this->DB);
+    // if(rc) {
+    //     fprintf(stderr, "Can't open ths sqlite database: %s\n", sqlite3_errmsg(this->DB));
+    //     exit(0);
+    // }
 
     // Loading the index
     cerr << "[INFO] Loading the index" << endl;
