@@ -60,7 +60,7 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
         input >> color >> colorSize;
         uint32_t sampleID;
         color_to_ids[color] = std::vector<uint32_t>(colorSize);
-        for (int j = 0; j < colorSize; j++) {
+        for (uint64_t j = 0; j < colorSize; j++) {
             input >> sampleID;
             color_to_ids[color][j] = sampleID;
         }
@@ -90,24 +90,17 @@ uint64_t virtualQs::create_super_color(flat_hash_set<uint64_t> &colors) {
 
 void virtualQs::calculate_kmers_number() {
 
-    for (auto const &superColor : this->superColors[this->kSize]) {
-        vector<uint32_t> tr_ids;
-        for (auto const &color : superColor.second)
-            for (auto const &id : this->color_to_ids[color])
-                tr_ids.push_back(id);
-
-        uint32_t color_count = this->superColorsCount[this->kSize][superColor.first];
-
-        for (auto const &tr_id : tr_ids) {
-            bool tr_exist = (this->seq_to_kmers_no.find(tr_id) != this->seq_to_kmers_no.end());
-            if (tr_exist) {
-                this->seq_to_kmers_no[tr_id] += color_count;
-            } else {
-                this->seq_to_kmers_no[tr_id] = color_count;
-            }
-        }
-
+    // Count Colors
+    flat_hash_map<uint64_t, uint64_t > colors_count;
+    auto it = this->KF->begin();
+    while(it != this->KF->end()){
+        colors_count[it.getKmerCount()]++;
+        it++;
     }
+
+    for(auto const &colorIDs : color_to_ids)
+        for(auto const &trID : colorIDs.second)
+            seq_to_kmers_no[trID] += colors_count[colorIDs.first];
 
 }
 
