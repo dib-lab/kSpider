@@ -35,7 +35,7 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
     this->index_prefix = index_prefix;
 
     // Constructing masks
-    for (auto const & Q : allQs)
+    for (auto const &Q : allQs)
         this->mainQs.insert(Q);
 
     bool ksize_in_Qs = (this->masks.find(this->kSize) != this->masks.end());
@@ -45,10 +45,11 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
 
     for (auto const &Q : this->mainQs) {
         this->masks[Q] = create_mask(this->kSize, Q);
-        this->superColors[Q] = flat_hash_map<uint64_t, flat_hash_set<uint64_t>>();
-        this->superColorsCount[Q] = flat_hash_map<uint64_t, uint64_t>();
-        this->temp_superColors[Q] = flat_hash_set<uint64_t>();
     }
+
+    this->superColors = flat_hash_map<uint64_t, flat_hash_set<uint64_t>>();
+    this->superColorsCount = flat_hash_map<uint64_t, uint64_t>();
+    this->temp_superColors = flat_hash_set<uint64_t>();
 
     string colors_map = this->index_prefix + "colors.intvectors";
     ifstream input(colors_map.c_str());
@@ -77,7 +78,7 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
 //        namesMapIn >> sample_id >> sample_name;
 //        this->namesMap[sample_id] = sample_id;
 //    }
-
+    this->calculate_kmers_number();
 }
 
 uint64_t virtualQs::create_super_color(flat_hash_set<uint64_t> &colors) {
@@ -90,99 +91,88 @@ uint64_t virtualQs::create_super_color(flat_hash_set<uint64_t> &colors) {
 
 void virtualQs::calculate_kmers_number() {
 
+    cerr << "kmers counting.." << endl;
+
     // Count Colors
-    flat_hash_map<uint64_t, uint64_t > colors_count;
+    flat_hash_map<uint64_t, uint64_t> colors_count;
     auto it = this->KF->begin();
-    while(it != this->KF->end()){
+    while (it != this->KF->end()) {
         colors_count[it.getKmerCount()]++;
         it++;
     }
 
-    for(auto const &colorIDs : color_to_ids)
-        for(auto const &trID : colorIDs.second)
+    for (auto const &colorIDs : color_to_ids)
+        for (auto const &trID : colorIDs.second)
             seq_to_kmers_no[trID] += colors_count[colorIDs.first];
 
 }
 
 void virtualQs::pairwise() {
-    this->calculate_kmers_number();
+
     Combo combo = Combo();
-    cerr << "Processing Qs: ";
-    for (auto const &Q : this->mainQs) {
-        cerr << Q << " ";
-        for (auto const &superColor : this->superColors[Q]) {
-            vector<uint32_t> tr_ids;
-            for (auto const &color : superColor.second)
-                for (auto const &id : this->color_to_ids[color])
-                    tr_ids.push_back(id);
+    cerr << "Processing pairwise for Q: " << this->curr_Q << std::endl;
 
-            uint32_t color_count = this->superColorsCount[Q][superColor.first];
-            combo.combinations(tr_ids.size());
-            for (auto const &seq_pair : combo.combs) {
-                uint32_t _seq1 = tr_ids[seq_pair.first];
-                uint32_t _seq2 = tr_ids[seq_pair.second];
-                _seq1 > _seq2 ? this->edges[{{_seq1, _seq2}, Q}] += color_count : this->edges[{{_seq2, _seq1}, Q}] += color_count;
-            }
+    for (auto const &superColor : this->superColors) {
+        vector<uint32_t> tr_ids;
+        for (auto const &color : superColor.second)
+            for (auto const &id : this->color_to_ids[color])
+                tr_ids.push_back(id);
+
+        uint32_t color_count = this->superColorsCount[superColor.first];
+
+        combo.combinations(tr_ids.size());
+
+        for (auto const &seq_pair : combo.combs) {
+            uint32_t _seq1 = tr_ids[seq_pair.first];
+            uint32_t _seq2 = tr_ids[seq_pair.second];
+            _seq1 > _seq2 ? this->edges[{_seq1, _seq2}] += color_count : this->edges[{_seq2, _seq1}] += color_count;
         }
-
     }
+
+
     cerr << endl;
 }
 
 
-inline string prepare_insertion(string & Q_names, vector<uint32_t> &values) {
+inline string prepare_insertion(string &Q_names, vector<uint32_t> &values) {
     std::string VALUES = join(values | transformed([](uint32_t d) { return std::to_string(d); }), ",");
     return "INSERT INTO virtualQs (seq1, seq2, min_kmers, " + Q_names + ") VALUES (" + VALUES + ");";
 }
 
 
-void virtualQs::export_to_tsv(){
-    Combo combo = Combo();
-    combo.combinations(this->seq_to_kmers_no.size());
+void virtualQs::export_to_tsv() {
+    cerr << "Exporting Q: " << this->curr_Q << std::endl;
     std::ofstream myfile;
-    myfile.open(this->index_prefix + "_kCluster.tsv");
+    myfile.open(this->index_prefix + "_kCluster.tsv", std::ios::out | std::ios::app);
+    if (myfile.fail())
+        throw std::ios_base::failure(std::strerror(errno));
+
+    //make sure write fails with exception if something is wrong
+    myfile.exceptions(myfile.exceptions() | std::ios::failbit | std::ifstream::badbit);
+
     myfile << "ID" << '\t' << "seq1" << '\t' << "seq2" << '\t' << "min_kmers" << '\t';
-    string delimiter = "";
-    for(auto const &val : this->mainQs){
-        myfile << delimiter << "Q_" << val;
-        delimiter = '\t';
-    }
+    myfile << "Q_" << this->curr_Q;
     myfile << '\n';
 
-    uint64_t line_count = 0;
-
-
-    for (auto const &seq_pair : combo.combs) {
+    for (auto const &seq_pair : edges) {
         uint32_t seq1;
         uint32_t seq2;
-        if(seq_pair.first > seq_pair.second){
-            seq1 = seq_pair.first + 1;
-            seq2 = seq_pair.second + 1;
-        }else{
-            seq2 = seq_pair.first + 1;
-            seq1 = seq_pair.second + 1;
+
+        if (seq_pair.first.first > seq_pair.first.second) {
+            seq1 = seq_pair.first.first;
+            seq2 = seq_pair.first.second;
+        } else {
+            seq2 = seq_pair.first.first;
+            seq1 = seq_pair.first.second;
         }
 
         uint32_t min_kmers = std::min(this->seq_to_kmers_no[seq1], this->seq_to_kmers_no[seq2]);
 
-        vector<uint32_t> values;
-        uint32_t sum = 0;
-        for(auto const & Q : this->mainQs){
-            uint32_t val = this->edges[{{seq1, seq2},Q}];
-            sum += val;
-            values.emplace_back(val);
-        }
+        myfile << seq1 << '\t' << seq2 << '\t' << min_kmers << '\t';
+        string delimiter = "";
+        myfile << delimiter << seq_pair.second;
+        myfile << '\n';
 
-        if(sum){
-            myfile << line_count << '\t' << seq1 << '\t' << seq2 << '\t' << min_kmers << '\t';
-            delimiter = "";
-            for(auto const &val : values){
-                myfile << delimiter << val;
-                delimiter = '\t';
-            }
-            myfile << '\n';
-        }
-        line_count ++;
     }
     myfile.close();
 }

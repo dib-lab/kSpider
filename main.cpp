@@ -55,81 +55,95 @@ int main(int argc, char **argv) {
 
     cerr << "[INFO] scanning virtualQs ..." << endl;
     t1 = Time::now();
-    auto it = VQ.KF->begin();
-    uint64_t prev_kmer = it.getHashedKmer();
-    uint64_t prev_kmer_color = it.getKmerCount();
-    uint64_t XOR;
-    uint64_t curr_kmer;
-    uint64_t curr_kmer_color;
 
-    bool matched;
 
-    while (it != VQ.KF->end()) {
-        it++;
-        curr_kmer = it.getHashedKmer();
-        curr_kmer_color = it.getKmerCount();
-        XOR = prev_kmer xor curr_kmer;
+    for (auto const &mask : VQ.masks) {
+        int Q = mask.first;
+        VQ.curr_Q = Q;
+        auto it = VQ.KF->begin();
+        uint64_t prev_kmer = it.getHashedKmer();
+        uint64_t prev_kmer_color = it.getKmerCount();
+        uint64_t XOR;
+        uint64_t curr_kmer = 0;
+        uint64_t curr_kmer_color = 0;
 
-        for (auto const &mask : VQ.masks) {
-            int Q = mask.first;
-            matched = !(bool) (XOR & mask.second);
+        while (it != VQ.KF->end()) {
+            it++;
+            curr_kmer = it.getHashedKmer();
+            curr_kmer_color = it.getKmerCount();
+            XOR = prev_kmer xor curr_kmer;
+
+
+            bool matched = !(bool) (XOR & mask.second);
 
             if (matched) {
-                VQ.temp_superColors[Q].insert(prev_kmer_color);
-                VQ.temp_superColors[Q].insert(curr_kmer_color);
+                VQ.temp_superColors.insert(prev_kmer_color);
+                VQ.temp_superColors.insert(curr_kmer_color);
             } else {
-                VQ.temp_superColors[Q].insert(prev_kmer_color);
-                uint64_t super_color_id = VQ.create_super_color(VQ.temp_superColors[Q]);
-                bool super_color_exist = (VQ.superColors[Q].find(super_color_id) != VQ.superColors[Q].end());
+                VQ.temp_superColors.insert(prev_kmer_color);
+                uint64_t super_color_id = VQ.create_super_color(VQ.temp_superColors);
+                bool super_color_exist = (VQ.superColors.find(super_color_id) != VQ.superColors.end());
 
                 if (super_color_exist) {
-                    VQ.superColorsCount[Q][super_color_id]++;
+                    VQ.superColorsCount[super_color_id]++;
                 } else {
-                    VQ.superColors[Q][super_color_id] = VQ.temp_superColors[Q];
-                    VQ.superColorsCount[Q][super_color_id] = 1;
+                    VQ.superColors[super_color_id] = VQ.temp_superColors;
+                    VQ.superColorsCount[super_color_id] = 1;
                 }
 
-                VQ.temp_superColors[Q].clear();
-                VQ.temp_superColors[Q].insert(curr_kmer_color);
+                VQ.temp_superColors.clear();
+                VQ.temp_superColors.insert(curr_kmer_color);
+            }
+            prev_kmer = curr_kmer;
+            prev_kmer_color = curr_kmer_color;
+        }
+
+
+        for (auto &superColor : VQ.temp_superColors) {
+            VQ.temp_superColors.erase(curr_kmer_color);
+            if (VQ.temp_superColors.empty()) {
+                continue;
+            }
+
+            uint64_t super_color_id = VQ.create_super_color(VQ.temp_superColors);
+            bool super_color_exist = (VQ.superColors.find(super_color_id) != VQ.superColors.end());
+
+            if (super_color_exist) {
+                VQ.superColorsCount[super_color_id]++;
+            } else {
+                VQ.superColors[super_color_id] = VQ.temp_superColors;
+                VQ.superColorsCount[super_color_id] = 1;
             }
 
         }
 
-
-        prev_kmer = curr_kmer;
-        prev_kmer_color = curr_kmer_color;
-
+        // Clearing
+        VQ.pairwise();
+        VQ.export_to_tsv();
+        VQ.superColors.clear();
+        VQ.edges.clear();
+        VQ.superColorsCount.clear();
+        VQ.temp_superColors.clear();
     }
 
-    for (auto &superColor : VQ.temp_superColors) {
-        int Q = superColor.first;
-        superColor.second.erase(curr_kmer_color);
-        if (superColor.second.empty()) {
-            continue;
-        }
-
-        uint64_t super_color_id = VQ.create_super_color(superColor.second);
-        bool super_color_exist = (VQ.superColors[Q].find(super_color_id) != VQ.superColors[Q].end());
-
-        if (super_color_exist) {
-            VQ.superColorsCount[Q][super_color_id]++;
-        } else {
-            VQ.superColors[Q][super_color_id] = VQ.temp_superColors[Q];
-            VQ.superColorsCount[Q][super_color_id] = 1;
-        }
-
-    }
-
-    t2 = Time::now();
-    cerr << "[SUCCESS] Done scanning virtualQs in: " << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count()
-         << " secs." << endl;
-
-    cerr << "[INFO] constructing pairwise matrix" << endl;
-    t1 = Time::now();
-    VQ.pairwise();
-    t2 = Time::now();
-    cerr << "[SUCCESS] Done constructing pairwise matrix in: "
-         << std::chrono::duration_cast<chrono::seconds>(t2 - t1).count() << " secs." << endl;
+//    t2 = Time::now();
+//    cerr << "[SUCCESS] Done scanning virtualQs in: "
+//         << std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count()
+//         << " secs." << endl;
+//
+//    cerr << "[INFO] constructing pairwise matrix" << endl;
+//    t1 = Time::now();
+//    VQ.pairwise();
+//    t2 = Time::now();
+//    cerr << "[SUCCESS] Done constructing pairwise matrix in: "
+//         << std::chrono::duration_cast<chrono::seconds>(t2 - t1).count() << " secs." << endl;
+//
+//    cerr << "[INFO] Exporting to TSV" << endl;
+//    t1 = Time::now();
+//    VQ.export_to_tsv();
+//    t2 = Time::now();
+//    cerr << "[SUCCESS] Done Exporting to TSV in: "
+//         << std::chrono::duration_cast<chrono::seconds>(t2 - t1).count() << " secs." << endl;
 
 //    for (auto const &edge : VQ.edges) {
 //        cout << "seq(" << edge.first.first << "," << edge.first.second << "): ";
@@ -140,12 +154,7 @@ int main(int argc, char **argv) {
 //
 //    }
 
-    cerr << "[INFO] Exporting to TSV" << endl;
-    t1 = Time::now();
-    VQ.export_to_tsv();
-    t2 = Time::now();
-    cerr << "[SUCCESS] Done Exporting to TSV in: "
-         << std::chrono::duration_cast<chrono::seconds>(t2 - t1).count() << " secs." << endl;
+
 
 
 

@@ -15,10 +15,11 @@ using std::string;
 
 class virtualQs {
 public:
-    flat_hash_map<uint8_t, flat_hash_set<uint64_t> > temp_superColors;
-    flat_hash_map<uint8_t, flat_hash_map<uint64_t, flat_hash_set<uint64_t> >> superColors;
-    flat_hash_map<uint8_t, flat_hash_map<uint64_t, uint64_t> > superColorsCount;
+    flat_hash_set<uint64_t> temp_superColors;
+    flat_hash_map<uint64_t, flat_hash_set<uint64_t>> superColors;
+    flat_hash_map<uint64_t, uint64_t> superColorsCount;
     flat_hash_map<int, uint64_t> masks;
+    int curr_Q = 0;
 //    vector<flat_hash_map<pair<uint32_t ,uint32_t>, uint32_t, boost::hash<pair<uint32_t, uint32_t>> >> edges;
 
 
@@ -26,9 +27,7 @@ public:
 //    flat_hash_map<std::pair<uint32_t, uint32_t>, flat_hash_map<uint8_t, uint32_t>, boost::hash<pair<uint32_t, uint32_t>>> edges;
 
     //2
-        flat_hash_map<std::pair<pair<uint32_t, uint32_t>, uint8_t>, uint32_t, boost::hash<pair<pair<uint32_t, uint32_t>, uint8_t>>> edges;
-
-
+    flat_hash_map<std::pair<uint32_t, uint32_t>, uint32_t, boost::hash<pair<uint32_t, uint32_t>>> edges;
 
 
 //    flat_hash_map<uint32_t, flat_hash_map<uint32_t, flat_hash_map<uint8_t, uint16_t>>> edges;
@@ -39,7 +38,7 @@ public:
     // sqlite3 *DB;
     char *DB_ErrMsg = 0;
 
-    set<int > mainQs;
+    set<int> mainQs;
 
     kDataFrame *KF;
     string index_prefix;
