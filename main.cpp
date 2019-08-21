@@ -48,14 +48,15 @@ int main(int argc, char **argv) {
     // Instantiating VirtualQs class
     auto t1 = Time::now();
     virtualQs VQ = virtualQs(index_prefix, Qs_set);
+
     auto t2 = Time::now();
-    cerr << "[SUCCESS] Done loading the index in: " << std::chrono::duration_cast<chrono::seconds>(t2 - t1).count()
+    cerr << "[SUCCESS] Done initializing the virtualQs in: " << std::chrono::duration_cast<chrono::seconds>(t2 - t1).count()
          << " secs." << endl;
+
 
 
     cerr << "[INFO] scanning virtualQs ..." << endl;
     t1 = Time::now();
-
 
     for (auto const &mask : VQ.masks) {
         int Q = mask.first;
@@ -117,11 +118,18 @@ int main(int argc, char **argv) {
 
         }
 
-        // Clearing
+        cerr << "superColors size: " << VQ.superColors.size() << endl;
+
+//         Clearing
         VQ.pairwise();
         VQ.export_to_tsv();
         VQ.superColors.clear();
-        VQ.edges.clear();
+//        VQ.edges.clear();
+
+        for(uint64_t i = 0; i < VQ.no_seqs; i++){
+            VQ.edges2[i].clear();
+        }
+
         VQ.superColorsCount.clear();
         VQ.temp_superColors.clear();
     }
@@ -197,7 +205,7 @@ int main(int argc, char **argv) {
 
     //     // Exporting superColors
 
-    // for (auto &superColor : VQ.superColors) {
+//    // for (auto &superColor : VQ.superColors) {
     //     int Q = superColor.first;
     //     cout << "Q" << Q << endl;
     //     for (auto const &color : superColor.second) {
@@ -212,7 +220,7 @@ int main(int argc, char **argv) {
     // }
     // cout << "---------------\nCount: \n";
 
-    // for (auto &superColor : VQ.superColorsCount) {
+//    // for (auto &superColor : VQ.superColorsCount) {
     //     int Q = superColor.first;
     //     cout << "Q" << Q << endl;
     //     for (auto const &color : superColor.second) {

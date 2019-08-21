@@ -55,24 +55,28 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
     ifstream input(colors_map.c_str());
     int size;
     input >> size;
-    color_to_ids = flat_hash_map<uint64_t, std::vector<uint32_t>>(size);
+    color_to_ids = flat_hash_map<uint32_t, std::vector<uint32_t>>(size);
     for (int i = 0; i < size; i++) {
-        uint64_t color, colorSize;
+        uint32_t color, colorSize;
         input >> color >> colorSize;
         uint32_t sampleID;
         color_to_ids[color] = std::vector<uint32_t>(colorSize);
-        for (uint64_t j = 0; j < colorSize; j++) {
+        for (uint32_t j = 0; j < colorSize; j++) {
             input >> sampleID;
             color_to_ids[color][j] = sampleID;
         }
     }
 
 
-    // Read NamesMap
+//     Read NamesMap
+    ifstream namesMapIn(index_prefix + ".namesMap");
+    namesMapIn >> this->no_seqs;
+    cerr << "Processing " <<  this->no_seqs << " seqs" << endl;
 
-//    ifstream namesMapIn(index_prefix + ".namesMap");
-//    namesMapIn >> size;
-//    for (int i = 0; i < size; i++) {
+    // Preallocation of the kmers
+    this->edges2 = vector<flat_hash_map<uint32_t , uint32_t >>(this->no_seqs);
+
+//    for (uint64_t i = 0; i <  this->no_seqs; i++) {
 //        uint32_t sample_id;
 //        string sample_name;
 //        namesMapIn >> sample_id >> sample_name;
@@ -91,7 +95,7 @@ uint64_t virtualQs::create_super_color(flat_hash_set<uint64_t> &colors) {
 
 void virtualQs::calculate_kmers_number() {
 
-    cerr << "kmers counting.." << endl;
+    cerr << "counting kmers.." << endl;
 
     // Count Colors
     flat_hash_map<uint64_t, uint64_t> colors_count;
@@ -125,12 +129,9 @@ void virtualQs::pairwise() {
         for (auto const &seq_pair : combo.combs) {
             uint32_t _seq1 = tr_ids[seq_pair.first];
             uint32_t _seq2 = tr_ids[seq_pair.second];
-            _seq1 > _seq2 ? this->edges[{_seq1, _seq2}] += color_count : this->edges[{_seq2, _seq1}] += color_count;
+            _seq1 < _seq2 ? this->edges2[_seq1][_seq2] += color_count : this->edges2[_seq2][_seq1] += color_count;
         }
     }
-
-
-    cerr << endl;
 }
 
 
@@ -147,33 +148,20 @@ void virtualQs::export_to_tsv() {
     if (myfile.fail())
         throw std::ios_base::failure(std::strerror(errno));
 
-    //make sure write fails with exception if something is wrong
+
     myfile.exceptions(myfile.exceptions() | std::ios::failbit | std::ifstream::badbit);
 
     myfile << "ID" << '\t' << "seq1" << '\t' << "seq2" << '\t' << "min_kmers" << '\t';
-    myfile << "Q_" << this->curr_Q;
-    myfile << '\n';
+    myfile << "Q" << '\n';
 
-    for (auto const &seq_pair : edges) {
-        uint32_t seq1;
-        uint32_t seq2;
 
-        if (seq_pair.first.first > seq_pair.first.second) {
-            seq1 = seq_pair.first.first;
-            seq2 = seq_pair.first.second;
-        } else {
-            seq2 = seq_pair.first.first;
-            seq1 = seq_pair.first.second;
+    for(uint64_t seq1 = 0; seq1 < no_seqs; seq1++){
+        for(auto const &seq2 : edges2[seq1]){
+            uint32_t min_kmers = std::min(this->seq_to_kmers_no[seq1], this->seq_to_kmers_no[seq2.first]);
+            myfile << seq1 << '\t' << seq2.first << '\t' << min_kmers << '\t' << seq2.second << '\t' << curr_Q << '\n';
         }
-
-        uint32_t min_kmers = std::min(this->seq_to_kmers_no[seq1], this->seq_to_kmers_no[seq2]);
-
-        myfile << seq1 << '\t' << seq2 << '\t' << min_kmers << '\t';
-        string delimiter = "";
-        myfile << delimiter << seq_pair.second;
-        myfile << '\n';
-
     }
+
     myfile.close();
 }
 

@@ -19,6 +19,7 @@ public:
     flat_hash_map<uint64_t, flat_hash_set<uint64_t>> superColors;
     flat_hash_map<uint64_t, uint64_t> superColorsCount;
     flat_hash_map<int, uint64_t> masks;
+    uint64_t no_seqs;
     int curr_Q = 0;
 //    vector<flat_hash_map<pair<uint32_t ,uint32_t>, uint32_t, boost::hash<pair<uint32_t, uint32_t>> >> edges;
 
@@ -28,11 +29,11 @@ public:
 
     //2
     flat_hash_map<std::pair<uint32_t, uint32_t>, uint32_t, boost::hash<pair<uint32_t, uint32_t>>> edges;
-
+    vector<flat_hash_map<uint32_t , uint32_t >> edges2;
 
 //    flat_hash_map<uint32_t, flat_hash_map<uint32_t, flat_hash_map<uint8_t, uint16_t>>> edges;
     flat_hash_map<uint32_t, uint32_t> seq_to_kmers_no;
-    flat_hash_map<uint64_t, vector<uint32_t>> color_to_ids;
+    flat_hash_map<uint32_t, vector<uint32_t>> color_to_ids;
 //    flat_hash_map<uint32_t, uint32_t> namesMap;
 
     // sqlite3 *DB;
