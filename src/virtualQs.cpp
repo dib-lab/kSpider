@@ -15,6 +15,26 @@ inline uint64_t create_mask(unsigned kSize, unsigned Q) {
     return ((1ULL << Q * 2ULL) - 1ULL) << (kSize * 2ULL - Q * 2ULL);
 }
 
+inline bool isDisjoint(set<uint32_t> &set1, set<uint32_t> &set2) {
+    set<uint32_t>::iterator i1, i2;
+    i1 = set1.begin();
+    i2 = set2.begin();            //initialize iterators with first element
+    while (i1 != set1.end() && i2 != set2.end()) {         //when both set have some elements to check
+        if (*i1 < *i2) i1++;                   //when item of first set is less than second set
+        else if (*i2 < *i1) i2++;               //when item of second set is less than first set
+        else return false;            //if items are matched, sets are not disjoint
+    }
+    return true;
+}
+
+void get_common_pairs(vector<pair<uint32_t, uint32_t>> &result, vector<set<uint32_t>> &values) {
+    int size = values.size();
+    for (int i = 0; i < size; i++)
+        for (int j = i + 1; j < size; j++)
+            if (isDisjoint(values[i], values[j])) result.push_back({i, j});
+
+}
+
 virtualQs::virtualQs(string index_prefix, set<int> allQs) {
 
     // Load the sqlite DB
