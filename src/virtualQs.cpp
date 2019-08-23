@@ -11,6 +11,7 @@ using std::cerr;
 using std::endl;
 using std::to_string;
 
+
 inline uint64_t create_mask(unsigned kSize, unsigned Q) {
     return ((1ULL << Q * 2ULL) - 1ULL) << (kSize * 2ULL - Q * 2ULL);
 }
@@ -31,7 +32,7 @@ void get_common_pairs(vector<pair<uint32_t, uint32_t>> &result, vector<set<uint3
     int size = values.size();
     for (int i = 0; i < size; i++)
         for (int j = i + 1; j < size; j++)
-            if (isDisjoint(values[i], values[j])) result.push_back({i, j});
+            if (isDisjoint(values[i], values[j])) result.emplace_back(i, j);
 
 }
 
@@ -49,7 +50,6 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
     // }
 
     // Loading the index
-    cerr << "[INFO] Loading the index" << endl;
     this->KF = kDataFrame::load(index_prefix);
     this->kSize = KF->ksize();
     this->index_prefix = index_prefix;
@@ -58,17 +58,17 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
     for (auto const &Q : allQs)
         this->mainQs.insert(Q);
 
-    bool ksize_in_Qs = (this->masks.find(this->kSize) != this->masks.end());
-
-    if (!ksize_in_Qs)
-        this->mainQs.insert(this->kSize);
+//    bool ksize_in_Qs = (this->masks.find(this->kSize) != this->masks.end());
+//
+//    if (!ksize_in_Qs)
+//        this->mainQs.insert(this->kSize);
 
     for (auto const &Q : this->mainQs) {
         this->masks[Q] = create_mask(this->kSize, Q);
     }
 
     this->superColors = flat_hash_map<uint64_t, flat_hash_set<uint64_t>>();
-    this->superColorsCount = flat_hash_map<uint64_t, uint64_t>();
+    this->superColorsCount = flat_hash_map<uint64_t, uint32_t>();
     this->temp_superColors = flat_hash_set<uint64_t>();
 
     string colors_map = this->index_prefix + "colors.intvectors";
@@ -94,15 +94,27 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
     cerr << "Processing " <<  this->no_seqs << " seqs" << endl;
 
     // Preallocation of the kmers
-    this->edges2 = vector<flat_hash_map<uint32_t , uint32_t >>(this->no_seqs);
+    this->edges2 = vector<flat_hash_map<uint32_t , uint16_t >>(this->no_seqs);
 
-//    for (uint64_t i = 0; i <  this->no_seqs; i++) {
+//    for (uint32_t i = 0; i <  this->no_seqs; i++) {
 //        uint32_t sample_id;
 //        string sample_name;
 //        namesMapIn >> sample_id >> sample_name;
-//        this->namesMap[sample_id] = sample_id;
 //    }
+
     this->calculate_kmers_number();
+    string filename = index_prefix + "_kCluster.tsv";
+    std::remove(filename.c_str());
+
+    myfile.open(filename, std::ios::out | std::ios::app);
+    if (myfile.fail())
+        throw std::ios_base::failure(std::strerror(errno));
+
+    myfile.exceptions(myfile.exceptions() | std::ios::failbit | std::ifstream::badbit);
+    myfile << "ID" << '\t' << "seq1" << '\t' << "seq2" << '\t' << "min_kmers" << '\t';
+    myfile << "Q" << '\n';
+
+
 }
 
 uint64_t virtualQs::create_super_color(flat_hash_set<uint64_t> &colors) {
@@ -133,22 +145,40 @@ void virtualQs::calculate_kmers_number() {
 
 void virtualQs::pairwise() {
 
-    Combo combo = Combo();
     cerr << "Processing pairwise for Q: " << this->curr_Q << std::endl;
 
     for (auto const &superColor : this->superColors) {
-        vector<uint32_t> tr_ids;
-        for (auto const &color : superColor.second)
-            for (auto const &id : this->color_to_ids[color])
-                tr_ids.push_back(id);
+        vector<set<uint32_t>> tr_ids;
+        vector<pair<uint32_t, uint32_t>> disjointed;
+
+        int idx_tr_ids = 0;
+
+        for (auto const &color : superColor.second) {
+            tr_ids.emplace_back(set<uint32_t>());
+            for (auto const &id : this->color_to_ids[color]) {
+                tr_ids[idx_tr_ids].insert(id);
+            }
+            ++idx_tr_ids;
+        }
+
+        // Get pairs of sets indeces to process
+        get_common_pairs(disjointed, tr_ids);
+
+        vector<pair<uint32_t, uint32_t >> tr_ids_pairs;
+
+        for (auto const &disjoint_pair : disjointed) {
+            for (auto const &seq1 : tr_ids[disjoint_pair.first]) {
+                for (auto const &seq2 : tr_ids[disjoint_pair.second]) {
+                    tr_ids_pairs.emplace_back(seq1, seq2);
+                }
+            }
+        }
 
         uint32_t color_count = this->superColorsCount[superColor.first];
-
-        combo.combinations(tr_ids.size());
-
-        for (auto const &seq_pair : combo.combs) {
-            uint32_t _seq1 = tr_ids[seq_pair.first];
-            uint32_t _seq2 = tr_ids[seq_pair.second];
+        uint32_t _seq1, _seq2;
+        for (auto const &seq_pair : tr_ids_pairs) {
+            _seq1 = seq_pair.first;
+            _seq2 = seq_pair.second;
             _seq1 < _seq2 ? this->edges2[_seq1][_seq2] += color_count : this->edges2[_seq2][_seq1] += color_count;
         }
     }
@@ -163,17 +193,6 @@ inline string prepare_insertion(string &Q_names, vector<uint32_t> &values) {
 
 void virtualQs::export_to_tsv() {
     cerr << "Exporting Q: " << this->curr_Q << std::endl;
-    std::ofstream myfile;
-    myfile.open(this->index_prefix + "_kCluster.tsv", std::ios::out | std::ios::app);
-    if (myfile.fail())
-        throw std::ios_base::failure(std::strerror(errno));
-
-
-    myfile.exceptions(myfile.exceptions() | std::ios::failbit | std::ifstream::badbit);
-
-    myfile << "ID" << '\t' << "seq1" << '\t' << "seq2" << '\t' << "min_kmers" << '\t';
-    myfile << "Q" << '\n';
-
 
     for(uint64_t seq1 = 0; seq1 < no_seqs; seq1++){
         for(auto const &seq2 : edges2[seq1]){
@@ -181,8 +200,6 @@ void virtualQs::export_to_tsv() {
             myfile << seq1 << '\t' << seq2.first << '\t' << min_kmers << '\t' << seq2.second << '\t' << curr_Q << '\n';
         }
     }
-
-    myfile.close();
 }
 
 /*

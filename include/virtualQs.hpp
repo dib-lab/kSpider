@@ -5,6 +5,7 @@
 #include <string>
 #include <set>
 #include <boost/functional/hash.hpp>
+#include <fstream>
 
 using phmap::flat_hash_map;
 using phmap::flat_hash_set;
@@ -17,7 +18,7 @@ class virtualQs {
 public:
     flat_hash_set<uint64_t> temp_superColors;
     flat_hash_map<uint64_t, flat_hash_set<uint64_t>> superColors;
-    flat_hash_map<uint64_t, uint64_t> superColorsCount;
+    flat_hash_map<uint64_t, uint32_t > superColorsCount;
     flat_hash_map<int, uint64_t> masks;
     uint64_t no_seqs;
     int curr_Q = 0;
@@ -28,8 +29,9 @@ public:
 //    flat_hash_map<std::pair<uint32_t, uint32_t>, flat_hash_map<uint8_t, uint32_t>, boost::hash<pair<uint32_t, uint32_t>>> edges;
 
     //2
-    flat_hash_map<std::pair<uint32_t, uint32_t>, uint32_t, boost::hash<pair<uint32_t, uint32_t>>> edges;
-    vector<flat_hash_map<uint32_t , uint32_t >> edges2;
+    flat_hash_map<pair<uint32_t,uint32_t>, uint32_t, boost::hash<pair<uint32_t,uint32_t>>> edges;
+    vector<flat_hash_map<uint32_t , uint16_t >> edges2;
+
 
 //    flat_hash_map<uint32_t, flat_hash_map<uint32_t, flat_hash_map<uint8_t, uint16_t>>> edges;
     flat_hash_map<uint32_t, uint32_t> seq_to_kmers_no;
@@ -37,11 +39,12 @@ public:
 //    flat_hash_map<uint32_t, uint32_t> namesMap;
 
     // sqlite3 *DB;
-    char *DB_ErrMsg = 0;
+    char *DB_ErrMsg = nullptr;
 
     set<int> mainQs;
 
     kDataFrame *KF;
+    std::ofstream myfile;
     string index_prefix;
     int kSize;
 
