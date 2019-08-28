@@ -4,7 +4,7 @@
 #include "combinations.hpp"
 #include <boost/algorithm/string/join.hpp>
 #include <boost/range/adaptor/transformed.hpp>
-// #include <sqlite3.h>
+
 using boost::adaptors::transformed;
 using boost::algorithm::join;
 using std::cerr;
@@ -28,7 +28,7 @@ inline bool isDisjoint(set<uint32_t> &set1, set<uint32_t> &set2) {
     return true;
 }
 
-void get_common_pairs(vector<pair<uint32_t, uint32_t>> &result, vector<set<uint32_t>> &values) {
+inline void get_common_pairs(vector<pair<uint32_t, uint32_t>> &result, vector<set<uint32_t>> &values) {
     int size = values.size();
     for (int i = 0; i < size; i++)
         for (int j = i + 1; j < size; j++)
@@ -36,32 +36,42 @@ void get_common_pairs(vector<pair<uint32_t, uint32_t>> &result, vector<set<uint3
 
 }
 
+inline void get_all_pairs(vector<pair<uint32_t, uint32_t>> &result, vector<set<uint32_t>> &values) {
+    int size = values.size();
+    for (int i = 0; i < size; i++)
+        for (int j = i + 1; j < size; j++)
+            result.emplace_back(i, j);
+}
+
 virtualQs::virtualQs(string index_prefix, set<int> allQs) {
 
     // Load the sqlite DB
     // TODO assert file exist before trying to load.
 
-    // string sqlite_file = index_prefix + "_kCluster.sqlite";
-    // int rc;
-    // rc = sqlite3_open(sqlite_file.c_str(), &this->DB);
-    // if(rc) {
-    //     fprintf(stderr, "Can't open ths sqlite database: %s\n", sqlite3_errmsg(this->DB));
-    //     exit(0);
-    // }
+    string sqlite_file = index_prefix + "_kCluster.sqlite";
+
+
+    // Constructing masks
+    for (auto const &Q : allQs)
+        this->mainQs.insert(Q);
+
+    // SQLITE INitializer
+    //    this->SQL = new SqliteHelper(sqlite_file, mainQs);
+
+//    exit(0);
+
+    //     int rc;
+//     rc = sqlite3_open(sqlite_file.c_str(), &this->DB);
+//     if(rc) {
+//         fprintf(stderr, "Can't open ths sqlite database: %s\n", sqlite3_errmsg(this->DB));
+//         exit(0);
+//     }
 
     // Loading the index
     this->KF = kDataFrame::load(index_prefix);
     this->kSize = KF->ksize();
     this->index_prefix = index_prefix;
 
-    // Constructing masks
-    for (auto const &Q : allQs)
-        this->mainQs.insert(Q);
-
-//    bool ksize_in_Qs = (this->masks.find(this->kSize) != this->masks.end());
-//
-//    if (!ksize_in_Qs)
-//        this->mainQs.insert(this->kSize);
 
     for (auto const &Q : this->mainQs) {
         this->masks[Q] = create_mask(this->kSize, Q);
@@ -91,10 +101,10 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
 //     Read NamesMap
     ifstream namesMapIn(index_prefix + ".namesMap");
     namesMapIn >> this->no_seqs;
-    cerr << "Processing " <<  this->no_seqs << " seqs" << endl;
+    cerr << "Processing " << this->no_seqs << " seqs" << endl;
 
     // Preallocation of the kmers
-    this->edges2 = vector<flat_hash_map<uint32_t , uint16_t >>(this->no_seqs);
+    this->edges2 = vector<flat_hash_map<uint32_t, uint16_t >>(this->no_seqs);
 
 //    for (uint32_t i = 0; i <  this->no_seqs; i++) {
 //        uint32_t sample_id;
@@ -111,9 +121,7 @@ virtualQs::virtualQs(string index_prefix, set<int> allQs) {
         throw std::ios_base::failure(std::strerror(errno));
 
     myfile.exceptions(myfile.exceptions() | std::ios::failbit | std::ifstream::badbit);
-    myfile << "ID" << '\t' << "seq1" << '\t' << "seq2" << '\t' << "min_kmers" << '\t';
-    myfile << "Q" << '\n';
-
+    myfile << "seq1" << '\t' << "seq2" << '\t' << "min_kmers" << '\t' << "Q" << '\t' << "shared" << '\n';
 
 }
 
@@ -143,9 +151,38 @@ void virtualQs::calculate_kmers_number() {
 
 }
 
+void virtualQs::kmers_pairwise() {
+
+    Combo combo = Combo();
+    cerr << "Processing pairwise for Q: " << this->curr_Q << std::endl;
+
+    for (auto const &superColor : this->superColors) {
+        vector<uint32_t> tr_ids;
+        for (auto const &color : superColor.second)
+            for (auto const &id : this->color_to_ids[color])
+                tr_ids.push_back(id);
+
+        uint32_t color_count = this->superColorsCount[superColor.first];
+
+        combo.combinations(tr_ids.size());
+
+        for (auto const &seq_pair : combo.combs) {
+            uint32_t _seq1 = tr_ids[seq_pair.first];
+            uint32_t _seq2 = tr_ids[seq_pair.second];
+            _seq1 < _seq2 ? this->edges2[_seq1][_seq2] += color_count : this->edges2[_seq2][_seq1] += color_count;
+        }
+    }
+}
+
 void virtualQs::pairwise() {
 
     cerr << "Processing pairwise for Q: " << this->curr_Q << std::endl;
+
+    if (this->curr_Q == (uint32_t) this->kSize) {
+        cerr << "kmers_pairwise()" << endl;
+        this->kmers_pairwise();
+        return;
+    }
 
     for (auto const &superColor : this->superColors) {
         vector<set<uint32_t>> tr_ids;
@@ -193,68 +230,93 @@ inline string prepare_insertion(string &Q_names, vector<uint32_t> &values) {
 
 void virtualQs::export_to_tsv() {
     cerr << "Exporting Q: " << this->curr_Q << std::endl;
-
-    for(uint64_t seq1 = 0; seq1 < no_seqs; seq1++){
-        for(auto const &seq2 : edges2[seq1]){
+    for (uint64_t seq1 = 0; seq1 < no_seqs; seq1++) {
+        for (auto const &seq2 : edges2[seq1]) {
             uint32_t min_kmers = std::min(this->seq_to_kmers_no[seq1], this->seq_to_kmers_no[seq2.first]);
-            myfile << seq1 << '\t' << seq2.first << '\t' << min_kmers << '\t' << seq2.second << '\t' << curr_Q << '\n';
+            myfile << seq1 << '\t' << seq2.first << '\t' << min_kmers << '\t' << curr_Q << '\t' << seq2.second  << '\n';
         }
     }
 }
 
-/*
 void virtualQs::export_to_sqlite() {
-    this->superColors.clear();
-    this->superColorsCount.clear();
-    vector<uint32_t > values;
+    cerr << "Exporting Q: " << this->curr_Q << std::endl;
+    vector<uint32_t> values;
+    std::string VALUES;
+    string statement;
     int rc;
-    values.reserve(4);
-    sqlite3_exec(this->DB, "PRAGMA cache_size=10000000", NULL, NULL, &this->DB_ErrMsg);
-    sqlite3_exec(this->DB, "BEGIN TRANSACTION", NULL, NULL, &this->DB_ErrMsg);
-    sqlite3_exec(this->DB, "PRAGMA synchronize = OFF", NULL, NULL, &this->DB_ErrMsg);
-    sqlite3_exec(this->DB, "PRAGMA jorunal_mode = MEMORY", NULL, NULL, &this->DB_ErrMsg);
-    std::string Q_names = "Q_" + join(this->mainQs | transformed([](uint8_t d) { return std::to_string(d); }), ", Q_");
 
-    Combo combo = Combo();
-    combo.combinations(this->seq_to_kmers_no.size());
+    sqlite3_exec(this->SQL->DB, "BEGIN TRANSACTION", NULL, NULL, &this->SQL->DB_ErrMsg);
+    sqlite3_exec(this->SQL->DB, "PRAGMA cache_size=1000000", NULL, NULL, &this->SQL->DB_ErrMsg);
 
-    int total_elements = 3 + this->mainQs.size();
+    for (uint32_t seq1 = 0; seq1 < no_seqs; seq1++) {
+        for (auto const &seq2 : edges2[seq1]) {
+            uint32_t min_kmers = std::min(this->seq_to_kmers_no[seq1], this->seq_to_kmers_no[seq2.first]);
 
-    for (auto const &seq_pair : combo.combs) {
-        uint32_t seq1;
-        uint32_t seq2;
-        if(seq_pair.first > seq_pair.second){
-            seq1 = seq_pair.first + 1;
-            seq2 = seq_pair.second + 1;
-        }else{
-            seq2 = seq_pair.first + 1;
-            seq1 = seq_pair.second + 1;
-        }
+            values = {seq1, seq2.first, min_kmers, curr_Q, seq2.second};
+            VALUES = join(values | transformed([](uint32_t d) { return std::to_string(d); }), ",");
+            statement = "INSERT INTO virtualQs (seq1, seq2, min_kmers, Q, shared) VALUES (" + VALUES + ");";
 
-        uint32_t min_kmers = std::min(this->seq_to_kmers_no[seq1], this->seq_to_kmers_no[seq2]);
-
-        vector<uint32_t> values = {seq1, seq2, min_kmers};
-        uint32_t sum = 0;
-        for(auto const & Q : this->mainQs){
-            uint32_t val = this->edges[{{seq1, seq2},Q}];
-            sum += val;
-            values.emplace_back(val);
-        }
-
-        if(sum){
-//            cout << "inserting: " << prepare_insertion(Q_names, values) << endl;
-            rc = sqlite3_exec(this->DB, prepare_insertion(Q_names, values).c_str(), NULL, 0, &this->DB_ErrMsg);
-            if( rc != SQLITE_OK ){
-                fprintf(stderr, "SQL error: %s\n", this->DB_ErrMsg);
-                sqlite3_free(&this->DB_ErrMsg);
+            rc = sqlite3_exec(this->SQL->DB, statement.c_str(), NULL, NULL, &this->SQL->DB_ErrMsg);
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "SQL error: %s\n", this->SQL->DB_ErrMsg);
+                sqlite3_free(&this->SQL->DB_ErrMsg);
             }
         }
-
     }
 
-
-    sqlite3_exec(this->DB, "END TRANSACTION", NULL, NULL, &this->DB_ErrMsg);
-    sqlite3_close(this->DB);
+    sqlite3_exec(this->SQL->DB, "END TRANSACTION", NULL, NULL, &this->SQL->DB_ErrMsg);
 }
 
-*/
+//void virtualQs::export_to_sqlite() {
+//    this->superColors.clear();
+//    this->superColorsCount.clear();
+//    vector<uint32_t > values;
+//    int rc;
+//    values.reserve(4);
+//    sqlite3_exec(this->SQL->DB, "PRAGMA cache_size=10000000", NULL, NULL, &this->SQL->DB_ErrMsg);
+//    sqlite3_exec(this->SQL->DB, "BEGIN TRANSACTION", NULL, NULL, &this->SQL->DB_ErrMsg);
+//    sqlite3_exec(this->SQL->DB, "PRAGMA synchronize = OFF", NULL, NULL, &this->SQL->DB_ErrMsg);
+//    sqlite3_exec(this->SQL->DB, "PRAGMA jorunal_mode = MEMORY", NULL, NULL, &this->SQL->DB_ErrMsg);
+//    std::string Q_names = "Q_" + join(this->mainQs | transformed([](uint8_t d) { return std::to_string(d); }), ", Q_");
+//
+//    Combo combo = Combo();
+//    combo.combinations(this->seq_to_kmers_no.size());
+//
+//    int total_elements = 3 + this->mainQs.size();
+//
+//    for (auto const &seq_pair : combo.combs) {
+//        uint32_t seq1;
+//        uint32_t seq2;
+//        if(seq_pair.first > seq_pair.second){
+//            seq1 = seq_pair.first + 1;
+//            seq2 = seq_pair.second + 1;
+//        }else{
+//            seq2 = seq_pair.first + 1;
+//            seq1 = seq_pair.second + 1;
+//        }
+//
+//        uint32_t min_kmers = std::min(this->seq_to_kmers_no[seq1], this->seq_to_kmers_no[seq2]);
+//
+//        vector<uint32_t> values = {seq1, seq2, min_kmers};
+//        uint32_t sum = 0;
+//        for(auto const & Q : this->mainQs){
+//            uint32_t val = this->edges[{{seq1, seq2},Q}];
+//            sum += val;
+//            values.emplace_back(val);
+//        }
+//
+//        if(sum){
+////            cout << "inserting: " << prepare_insertion(Q_names, values) << endl;
+//            rc = sqlite3_exec(this->SQL->DB, prepare_insertion(Q_names, values).c_str(), NULL, 0, &this->SQL->DB_ErrMsg);
+//            if( rc != SQLITE_OK ){
+//                fprintf(stderr, "SQL error: %s\n", this->SQL->DB_ErrMsg);
+//                sqlite3_free(&this->SQL->DB_ErrMsg);
+//            }
+//        }
+//
+//    }
+//
+//
+//    sqlite3_exec(this->SQL->DB, "END TRANSACTION", NULL, NULL, &this->SQL->DB_ErrMsg);
+//    sqlite3_close(this->SQL->DB);
+//}

@@ -4,10 +4,12 @@
 #include "argh.h"
 #include "combinations.hpp"
 #include <chrono>
+#include "pivote.hpp"
 
 typedef std::chrono::high_resolution_clock Time;
 
 int main(int argc, char **argv) {
+
 
     // TODO: Finish the aguments parsing later.
 
@@ -19,7 +21,6 @@ int main(int argc, char **argv) {
     set<int> Qs_set;
 
     argh::parser cmdl(argv);
-
     bool entered_minQ = (!!(cmdl({"-m", "--min-q"}) >> minQ));
     bool entered_maxQ = (!!(cmdl({"-M", "--max-q"}) >> maxQ));
     bool entered_stepQ = (!!(cmdl({"-s", "--step-q"}) >> stepQ));
@@ -45,14 +46,20 @@ int main(int argc, char **argv) {
 
     // End Arguments parsing ----------------------------
 
+    if(cmdl[1] == "pivote"){
+        cerr << "pivoting..." << endl;
+        pivote(index_prefix, Qs_set);
+        exit(0);
+    }
+
     // Instantiating VirtualQs class
     auto t1 = Time::now();
     virtualQs VQ = virtualQs(index_prefix, Qs_set);
 
     auto t2 = Time::now();
-    cerr << "[SUCCESS] Done initializing the virtualQs in: " << std::chrono::duration_cast<chrono::seconds>(t2 - t1).count()
+    cerr << "[SUCCESS] Done initializing the virtualQs in: "
+         << std::chrono::duration_cast<chrono::seconds>(t2 - t1).count()
          << " secs." << endl;
-
 
 
     cerr << "[INFO] scanning virtualQs ..." << endl;
@@ -122,17 +129,27 @@ int main(int argc, char **argv) {
 
 //         Clearing
         VQ.pairwise();
+
         VQ.export_to_tsv();
+//        VQ.export_to_sqlite();
         VQ.superColors.clear();
 //        VQ.edges.clear();
 
-        for(uint64_t i = 0; i < VQ.no_seqs; i++){
+        for (uint64_t i = 0; i < VQ.no_seqs; i++) {
             VQ.edges2[i].clear();
         }
 
         VQ.superColorsCount.clear();
         VQ.temp_superColors.clear();
     }
+
+
+//    VQ.SQL->close();
+    VQ.myfile.close();
+    return EXIT_SUCCESS;
+}
+
+
 
 //    t2 = Time::now();
 //    cerr << "[SUCCESS] Done scanning virtualQs in: "
@@ -203,34 +220,30 @@ int main(int argc, char **argv) {
 
 
 
-    //     // Exporting superColors
+//     // Exporting superColors
 
 //    // for (auto &superColor : VQ.superColors) {
-    //     int Q = superColor.first;
-    //     cout << "Q" << Q << endl;
-    //     for (auto const &color : superColor.second) {
-    //         uint64_t supercolor_id = color.first;
-    //         cout << supercolor_id << ": ";
-    //         for (auto const &c : color.second) {
-    //             cout << c << ", ";
-    //         }
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
-    // cout << "---------------\nCount: \n";
+//     int Q = superColor.first;
+//     cout << "Q" << Q << endl;
+//     for (auto const &color : superColor.second) {
+//         uint64_t supercolor_id = color.first;
+//         cout << supercolor_id << ": ";
+//         for (auto const &c : color.second) {
+//             cout << c << ", ";
+//         }
+//         cout << endl;
+//     }
+//     cout << endl;
+// }
+// cout << "---------------\nCount: \n";
 
 //    // for (auto &superColor : VQ.superColorsCount) {
-    //     int Q = superColor.first;
-    //     cout << "Q" << Q << endl;
-    //     for (auto const &color : superColor.second) {
-    //         uint64_t supercolor_id = color.first;
-    //         cout << supercolor_id << ": " << color.second;
-    //         cout << endl;
-    //     }
-    //     cout << endl;
-    // }
-
-
-    return EXIT_SUCCESS;
-}
+//     int Q = superColor.first;
+//     cout << "Q" << Q << endl;
+//     for (auto const &color : superColor.second) {
+//         uint64_t supercolor_id = color.first;
+//         cout << supercolor_id << ": " << color.second;
+//         cout << endl;
+//     }
+//     cout << endl;
+// }

@@ -5,7 +5,7 @@
 cmake_minimum_required (VERSION 3.4)
 project (kCluster C CXX)
 set(default_build_type "Release")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -Ofast -Wall -Wextra -march=native")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3 -Ofast -Wall -Wextra -march=native")
 
 # ----------------------------------------------------------------------------
 # kProcessor Setup
@@ -45,6 +45,6 @@ include_directories(${kCluster_INCLUDE_DIRS})
 
 add_executable (kCluster_pairwise ${SOURCES} src/combinations.cpp)
 
-#target_link_libraries (kCluster_pairwise kProcessor sqlite3)
-target_link_libraries (kCluster_pairwise kProcessor)
+target_link_libraries (kCluster_pairwise kProcessor sqlite3)
+#target_link_libraries (kCluster_pairwise kProcessor)
 target_include_directories(kCluster_pairwise INTERFACE ${PHMAP_INCLUDE_DIRS} ${kProcessor_INCLUDE_PATH})
