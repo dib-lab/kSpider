@@ -65,8 +65,8 @@ int main(int argc, char **argv) {
     cerr << "[INFO] scanning virtualQs ..." << endl;
     t1 = Time::now();
 
-    for (auto const &mask : VQ.masks) {
-        int Q = mask.first;
+    for (int const &Q : Qs_set) {
+        uint64_t mask = VQ.masks[Q];
         VQ.curr_Q = Q;
         auto it = VQ.KF->begin();
         uint64_t prev_kmer = it.getHashedKmer();
@@ -81,8 +81,7 @@ int main(int argc, char **argv) {
             curr_kmer_color = it.getKmerCount();
             XOR = prev_kmer xor curr_kmer;
 
-
-            bool matched = !(bool) (XOR & mask.second);
+            bool matched = !(bool) (XOR & mask);
 
             if (matched) {
                 VQ.temp_superColors.insert(prev_kmer_color);

@@ -30,6 +30,7 @@ inline bool isDisjoint(set<uint32_t> &set1, set<uint32_t> &set2) {
 
 inline void get_common_pairs(vector<pair<uint32_t, uint32_t>> &result, vector<set<uint32_t>> &values) {
     int size = values.size();
+    if (size == 1) return;
     for (int i = 0; i < size; i++)
         for (int j = i + 1; j < size; j++)
             if (isDisjoint(values[i], values[j])) result.emplace_back(i, j);
@@ -179,17 +180,17 @@ void virtualQs::pairwise() {
     cerr << "Processing pairwise for Q: " << this->curr_Q << std::endl;
 
     if (this->curr_Q == (uint32_t) this->kSize) {
-        cerr << "kmers_pairwise()" << endl;
         this->kmers_pairwise();
         return;
     }
+
+    Combo combo = Combo();
 
     for (auto const &superColor : this->superColors) {
         vector<set<uint32_t>> tr_ids;
         vector<pair<uint32_t, uint32_t>> disjointed;
 
         int idx_tr_ids = 0;
-
         for (auto const &color : superColor.second) {
             tr_ids.emplace_back(set<uint32_t>());
             for (auto const &id : this->color_to_ids[color]) {
@@ -203,16 +204,34 @@ void virtualQs::pairwise() {
 
         vector<pair<uint32_t, uint32_t >> tr_ids_pairs;
 
-        for (auto const &disjoint_pair : disjointed) {
-            for (auto const &seq1 : tr_ids[disjoint_pair.first]) {
-                for (auto const &seq2 : tr_ids[disjoint_pair.second]) {
-                    tr_ids_pairs.emplace_back(seq1, seq2);
+        if (disjointed.empty() && tr_ids.size() == 1) {
+
+            if (tr_ids[0].size() == 1)
+                continue;
+
+            vector<uint32_t> _tr_ids;
+
+            for (auto const &tr : tr_ids[0])
+                _tr_ids.push_back(tr);
+
+            combo.combinations(_tr_ids.size());
+            for (auto const &com : combo.combs) {
+                tr_ids_pairs.emplace_back(_tr_ids[com.first], _tr_ids[com.second]);
+            }
+
+        } else {
+            for (auto const &disjoint_pair : disjointed) {
+                for (auto const &seq1 : tr_ids[disjoint_pair.first]) {
+                    for (auto const &seq2 : tr_ids[disjoint_pair.second]) {
+                        tr_ids_pairs.emplace_back(seq1, seq2);
+                    }
                 }
             }
         }
 
         uint32_t color_count = this->superColorsCount[superColor.first];
         uint32_t _seq1, _seq2;
+
         for (auto const &seq_pair : tr_ids_pairs) {
             _seq1 = seq_pair.first;
             _seq2 = seq_pair.second;
@@ -233,7 +252,7 @@ void virtualQs::export_to_tsv() {
     for (uint64_t seq1 = 0; seq1 < no_seqs; seq1++) {
         for (auto const &seq2 : edges2[seq1]) {
             uint32_t min_kmers = std::min(this->seq_to_kmers_no[seq1], this->seq_to_kmers_no[seq2.first]);
-            myfile << seq1 << '\t' << seq2.first << '\t' << min_kmers << '\t' << curr_Q << '\t' << seq2.second  << '\n';
+            myfile << seq1 << '\t' << seq2.first << '\t' << min_kmers << '\t' << curr_Q << '\t' << seq2.second << '\n';
         }
     }
 }
