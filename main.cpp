@@ -84,10 +84,10 @@ int main(int argc, char **argv) {
             bool matched = !(bool) (XOR & mask);
 
             if (matched) {
-                VQ.temp_superColors.insert(prev_kmer_color);
-                VQ.temp_superColors.insert(curr_kmer_color);
+                VQ.temp_superColors.push_back(prev_kmer_color);
+                VQ.temp_superColors.push_back(curr_kmer_color);
             } else {
-                VQ.temp_superColors.insert(prev_kmer_color);
+                VQ.temp_superColors.push_back(prev_kmer_color);
                 uint64_t super_color_id = VQ.create_super_color(VQ.temp_superColors);
                 bool super_color_exist = (VQ.superColors.find(super_color_id) != VQ.superColors.end());
 
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
                 }
 
                 VQ.temp_superColors.clear();
-                VQ.temp_superColors.insert(curr_kmer_color);
+                VQ.temp_superColors.push_back(curr_kmer_color);
             }
             prev_kmer = curr_kmer;
             prev_kmer_color = curr_kmer_color;
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
 
 
         for (auto &superColor : VQ.temp_superColors) {
-            VQ.temp_superColors.erase(curr_kmer_color);
+            VQ.temp_superColors.erase(std::remove(VQ.temp_superColors.begin(), VQ.temp_superColors.end(), curr_kmer_color), VQ.temp_superColors.end());
             if (VQ.temp_superColors.empty()) {
                 continue;
             }

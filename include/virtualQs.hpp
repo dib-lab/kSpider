@@ -18,8 +18,8 @@ using std::string;
 
 class virtualQs {
 public:
-    flat_hash_set<uint64_t> temp_superColors;
-    flat_hash_map<uint64_t, flat_hash_set<uint64_t>> superColors;
+    vector<uint64_t> temp_superColors;
+    flat_hash_map<uint64_t, vector<uint64_t>> superColors;
     flat_hash_map<uint64_t, uint32_t> superColorsCount;
     flat_hash_map<int, uint64_t> masks;
     uint64_t no_seqs;
@@ -47,7 +47,7 @@ public:
 
     virtualQs(string index_path, set<int> mainQs);
 
-    uint64_t create_super_color(flat_hash_set<uint64_t> &colors);
+    uint64_t create_super_color(vector<uint64_t> &colors_vec);
 
     void calculate_kmers_number();
 
