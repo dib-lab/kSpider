@@ -1,4 +1,4 @@
-# kCluster2
+# kSpider2 | C++ verison of the kSpider software tool.
 
 ## Installation
 
