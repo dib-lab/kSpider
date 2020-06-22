@@ -5,7 +5,7 @@
 ### Clone
 
 ```bash
-git clone https://github.com/mr-eyes/kCluster2.git
+git clone https://github.com/mr-eyes/kSpider2.git
 cd kCluster2
 git submodule update --init --recursive
 ```
