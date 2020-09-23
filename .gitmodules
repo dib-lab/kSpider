@@ -4,7 +4,3 @@
 [submodule "lib/argh"]
 	path = lib/argh
 	url = https://github.com/adishavit/argh
-[submodule "lib/kProcessor"]
-	path = lib/kProcessor
-	url = https://github.com/dib-lab/kProcessor.git
-	branch = devel
