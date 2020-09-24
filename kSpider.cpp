@@ -93,6 +93,15 @@ int main(int argc, char **argv) {
         }
     }
 
+    std::ofstream fstream_kmerCount;
+    fstream_kmerCount.open(index_prefix + "_kSpider_seqToKmersNo.tsv");
+    fstream_kmerCount << "ID\tseq\tkmers\n";
+    uint64_t counter = 0;
+    for(const auto & item : groupID_to_kmerCount){
+        fstream_kmerCount << ++counter << '\t' << item.first << '\t' << item.second << '\n';
+    }
+    fstream_kmerCount.close();
+
     Combo combo = Combo();
     flat_hash_map<std::pair<uint32_t, uint32_t>, uint32_t, boost::hash<pair<uint32_t, uint32_t>>> edges;
     for (const auto &item : color_to_ids) {
@@ -110,13 +119,12 @@ int main(int argc, char **argv) {
 
     myfile.open(index_prefix + "_kSpider_pairwise.tsv");
 
-    myfile << "ID" << '\t' << "seq1" << '\t' << "seq2" << '\t' << "shared_kmers" << '\t' << "min_kmers" << '\n';
+    myfile << "ID" << '\t' << "seq1" << '\t' << "seq2" << '\t' << "shared_kmers" << '\n';
 
     uint64_t line_count = 0;
 
     for (const auto &edge : edges) {
-        uint32_t min_kmers = std::min(groupID_to_kmerCount[edge.first.first], groupID_to_kmerCount[edge.first.second]);
-        myfile << ++line_count << '\t' << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << min_kmers << '\n';
+        myfile << ++line_count << '\t' << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\n';
     }
 
     myfile.close();
