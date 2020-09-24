@@ -5,8 +5,7 @@
 cmake_minimum_required (VERSION 3.4)
 project (kCluster C CXX)
 set(default_build_type "Release")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3 -Ofast -Wall -Wextra -march=native")
-
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -fPIC -lgomp -lrt -fopenmp -W -Wall -pedantic -O3 -Ofast -march=native")
 # ----------------------------------------------------------------------------
 # kProcessor Setup
 # ----------------------------------------------------------------------------
@@ -35,7 +34,7 @@ include_directories("${PHMAP_INCLUDE_DIRS}")
 
 file(GLOB SOURCES
         "${PROJECT_SOURCE_DIR}/src/*"
-        "${PROJECT_SOURCE_DIR}/main.cpp"
+        "${PROJECT_SOURCE_DIR}/kSpider.cpp"
         )
 
 set(kCluster_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -43,8 +42,6 @@ set(kCluster_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 include_directories(${kCluster_INCLUDE_DIRS})
 
-add_executable (kCluster_pairwise ${SOURCES} src/combinations.cpp)
-
-#target_link_libraries (kCluster_pairwise kProcessor sqlite3)
-target_link_libraries (kCluster_pairwise kProcessor)
-target_include_directories(kCluster_pairwise INTERFACE ${PHMAP_INCLUDE_DIRS} ${kProcessor_INCLUDE_PATH})
+add_executable (kSpider_pairwise kSpider.cpp)
+target_link_libraries (kSpider_pairwise kProcessor)
+target_include_directories(kSpider_pairwise INTERFACE ${PHMAP_INCLUDE_DIRS} ${kProcessor_INCLUDE_PATH})
