@@ -13,6 +13,7 @@ git submodule update --init --recursive
 ### Install
 
 ```bash
+# pwd = kSpider2
 PROJECT=$(pwd)
 cd lib/kProcessor
 mkdir build && cd build && cmake .. && make
