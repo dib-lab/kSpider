@@ -32,11 +32,6 @@ include_directories("${PHMAP_INCLUDE_DIRS}")
 # Add CXX flags found by find_package (SeqAn).
 
 
-file(GLOB SOURCES
-        "${PROJECT_SOURCE_DIR}/src/*"
-        "${PROJECT_SOURCE_DIR}/kSpider.cpp"
-        )
-
 set(kCluster_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 
