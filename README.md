@@ -6,7 +6,7 @@
 
 ```bash
 git clone https://github.com/mr-eyes/kSpider2.git
-cd kCluster2
+cd kSpider2
 git submodule update --init --recursive
 ```
 
@@ -22,12 +22,8 @@ cd ..
 
 ```bash
 
-MIN_Q=5
-MAX_Q=25
-STEP_Q=5
-
 INDEX_PREFIX=idx_seq
 
-./kCluster_pairwise --min-q=${MIN_Q} --max-q=${MAX_Q} --step-q=${STEP_Q} --idx=${INDEX_PREFIX}
+./kSpider_pairwise ${INDEX_PREFIX}
 
 ```
