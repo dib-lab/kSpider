@@ -13,6 +13,10 @@ git submodule update --init --recursive
 ### Install
 
 ```bash
+PROJECT=$(pwd)
+cd lib/kProcessor
+mkdir build && cd build && cmake .. && make
+cd $PROJECT
 mkdir build && cd build/
 cmake .. && make
 cd ..
