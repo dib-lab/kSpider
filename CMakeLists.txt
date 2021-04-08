@@ -2,8 +2,15 @@
 # kCluster project
 # ----------------------------------------------------------------------------
 
-cmake_minimum_required (VERSION 3.4)
-project (kCluster C CXX)
+# Minimum cmake version
+cmake_minimum_required (VERSION 3.14...3.20)
+# Name of project and that it is C/C++.
+project (
+        kSpider
+        LANGUAGES CXX C
+        VERSION 1.0.0
+)
+
 set(default_build_type "Release")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -fPIC -lgomp -lrt -fopenmp -W -Wall -pedantic -O3 -Ofast -march=native")
 # ----------------------------------------------------------------------------
