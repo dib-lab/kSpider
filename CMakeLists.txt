@@ -8,42 +8,34 @@ cmake_minimum_required (VERSION 3.14...3.20)
 project (
         kSpider
         LANGUAGES CXX C
-        VERSION 1.0.0
+        VERSION 2.0.0
 )
 
 set(default_build_type "Release")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17 -fPIC -lgomp -lrt -fopenmp -W -Wall -pedantic -O3 -Ofast -march=native")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC -lgomp -lrt -fopenmp -pedantic -O3 -Ofast -march=native")
 # ----------------------------------------------------------------------------
 # kProcessor Setup
 # ----------------------------------------------------------------------------
 
 add_subdirectory(lib/kProcessor)
 
-set(kProcessor_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/lib/kProcessor/include")
+include_directories("${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor")
 include_directories("${PROJECT_SOURCE_DIR}/lib/kProcessor/ThirdParty/MQF/include")
 
-# Add include directories.
-include_directories (${kProcessor_INCLUDE_PATH})
+set(kProcessor_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/lib/kProcessor/include" "${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor")
+include_directories(${kProcessor_INCLUDE_PATH})
 
 # ----------------------------------------------------------------------------
 # END kProcessor Setup
 # ----------------------------------------------------------------------------
 
+include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/lib/argh")
 
 set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/parallel-hashmap")
 include_directories("${PHMAP_INCLUDE_DIRS}")
 
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++14 -fPIC -fopenmp -W -pedantic -O3 -Ofast")
-
-# Add CXX flags found by find_package (SeqAn).
-
-
-set(kCluster_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include")
-
-
-include_directories(${kCluster_INCLUDE_DIRS})
-
-add_executable (kSpider_pairwise kSpider.cpp)
-target_link_libraries (kSpider_pairwise kProcessor)
-target_include_directories(kSpider_pairwise INTERFACE ${PHMAP_INCLUDE_DIRS} ${kProcessor_INCLUDE_PATH})
+add_library(kSpider STATIC src/pairwise.cpp ${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor)
+set_target_properties(kSpider PROPERTIES POSITION_INDEPENDENT_CODE 1 CXX_STANDARD 17)
+target_link_libraries (kSpider kProcessor z)
+target_include_directories(kSpider INTERFACE ${PHMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor)
