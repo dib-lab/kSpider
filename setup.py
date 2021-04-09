@@ -149,7 +149,7 @@ class BuildPy(build_py):
         self.run_command('build_ext')
         super(build_py, self).run()
 
-setup(name='kSpider',
+setup(name='kSpider2',
       version="2.0.0",
       description="""kSpider Python interface""",
       ext_modules=[kSpider_module],
@@ -168,7 +168,7 @@ setup(name='kSpider',
       include_package_data=True,
       entry_points='''
         [console_scripts]
-        kSpider=kSpider:cli
+        kSpider2=kSpider:clikP
     ''',
       project_urls={
           'Bug Reports': 'https://github.com/mr-eyes/kSpider2/issues',
