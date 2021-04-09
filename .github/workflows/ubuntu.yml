@@ -39,7 +39,7 @@ jobs:
         run: cmake -BkSpider_BUILD_DIR
 
       - name: build
-        run: cmake --build kSpider_BUILD_DIR -j4
+        run: cmake --build kSpider_BUILD_DIR -j1
 
       # - name: test
       #   run: |
