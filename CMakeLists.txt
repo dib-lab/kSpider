@@ -32,7 +32,7 @@ include_directories(${kProcessor_INCLUDE_PATH})
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/lib/argh")
 
-set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/parallel-hashmap")
+set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap")
 include_directories("${PHMAP_INCLUDE_DIRS}")
 
 add_library(kSpider STATIC src/pairwise.cpp ${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor)

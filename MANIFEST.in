@@ -13,6 +13,7 @@ recursive-include lib/kProcessor/ThirdParty/json *
 recursive-include lib/kProcessor/ThirdParty/sdsl-lite/include *
 recursive-include lib/kProcessor/ThirdParty/kmerDecoder/include *
 recursive-include lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap *
+recursive-include lib/parallel-hashmap *
 recursive-include lib/kProcessor/ThirdParty/kmerDecoder/lib/kseq/include *
 
 recursive-include kSpider_BUILD_DIR lib*a
