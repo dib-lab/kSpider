@@ -36,10 +36,10 @@ jobs:
       #   run: cmake -Stest -Bbuild -DENABLE_TEST_COVERAGE=1 -DCMAKE_BUILD_TYPE=Debug
 
       - name: configure
-        run: cmake -Bbuild
+        run: cmake -BkSpider_BUILD_DIR
 
       - name: build
-        run: cmake --build build -j4
+        run: cmake --build kSpider_BUILD_DIR -j4
 
       # - name: test
       #   run: |

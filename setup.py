@@ -69,7 +69,7 @@ INCLUDES = [
     'lib/kProcessor/ThirdParty/kmerDecoder/include',
     'lib/kProcessor/ThirdParty/kmerDecoder/lib/kseq/include',
     'lib/kProcessor/ThirdParty/sdsl-lite/include',
-    '/lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap',
+    'lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap',
 ]
 
 check_exist(INCLUDES)
