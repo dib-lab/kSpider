@@ -12,7 +12,7 @@ import _kSpider_internal as kSpider_internal
 #     print("kSpider_internal is not built yet", file = sys.stderr)
 
 import click
-from kSpider.click_context import cli
+from kSpider2.click_context import cli
 
 
 @cli.command(name = "pairwise", help_priority=1)

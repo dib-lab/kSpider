@@ -169,7 +169,7 @@ setup(name='kSpider2',
       include_package_data=True,
       entry_points='''
         [console_scripts]
-        kSpider2=kSpider:clikP
+        kSpider2=kSpider:cli
     ''',
       project_urls={
           'Bug Reports': 'https://github.com/mr-eyes/kSpider2/issues',

@@ -36,7 +36,7 @@ $(which python) setup.py bdist_wheel
 
 cd dist/
 
-$(which python) -m pip uninstall kSpider -y
+$(which python) -m pip uninstall kSpider2 -y
 
 $(which python) -m pip install kSpider*cp*.whl
 
