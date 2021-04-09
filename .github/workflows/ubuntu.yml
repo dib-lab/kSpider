@@ -1,5 +1,4 @@
 name: Ubuntu
-
 on:
   push:
     branches:
@@ -7,11 +6,6 @@ on:
   pull_request:
     branches:
       - master
-
-env:
-  CTEST_OUTPUT_ON_FAILURE: 1
-  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  CPM_SOURCE_CACHE: ${{ github.workspace }}/cpm_modules
 
 jobs:
   build:
@@ -32,18 +26,11 @@ jobs:
       - name: install_cmake
         run: pip install cmake
 
-      # - name: configure
-      #   run: cmake -Stest -Bbuild -DENABLE_TEST_COVERAGE=1 -DCMAKE_BUILD_TYPE=Debug
-
       - name: configure
         run: cmake -BkSpider_BUILD_DIR
 
       - name: build
         run: cmake --build kSpider_BUILD_DIR -j1
 
-      # - name: test
-      #   run: |
-      #     cd build
-      #     ctest --build-config Debug
       - name: collect code coverage
         run: bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
