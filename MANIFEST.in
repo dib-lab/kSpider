@@ -24,8 +24,6 @@ include kSpider_BUILD_DIR/lib/kProcessor/ThirdParty/kmerDecoder/libkmerDecoder.a
 include kSpider_BUILD_DIR/lib/kProcessor/ThirdParty/MQF/src/libMQF.a
 include kSpider_BUILD_DIR/lib/kProcessor/ThirdParty/sdsl-lite/lib/libsdsl.a
 
-include kSpider_internal.py
-
 # Include SWIG interfaces
 recursive-include src/swig_interfaces *
 recursive-include pykSpider/ *
