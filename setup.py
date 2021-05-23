@@ -7,15 +7,6 @@ import os
 import subprocess
 import errno
 
-KPROCESSOR = r"""
-  _    _____                                        
- | |  |  __ \                                       
- | | _| |__) | __ ___   ___ ___  ___ ___  ___  _ __ 
- | |/ /  ___/ '__/ _ \ / __/ _ \/ __/ __|/ _ \| '__|
- |   <| |   | | | (_) | (_|  __/\__ \__ \ (_) | |   
- |_|\_\_|   |_|  \___/ \___\___||___/___/\___/|_|                                                                                                        
-"""
-
 if sys.version_info[:2] < (3, 6):
     raise RuntimeError("Python version >=3.6")
 
@@ -151,7 +142,7 @@ class BuildPy(build_py):
         super(build_py, self).run()
 
 setup(name='kSpider2',
-      version="2.0.0",
+      version="2.0.1",
       description="""kSpider Python interface""",
       ext_modules=[kSpider_module],
       py_modules=['kSpider_internal'],
