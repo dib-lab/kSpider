@@ -17,13 +17,13 @@ function cleanup() {
     rm -rf *cxx
     rm -rf *pyc
     rm -rf src/swig_interfaces/kSpider_internal_wrap.cpp
-    rm -rf pykSpider/kSpider_internal.py
+    rm -rf pykSpider/internal/kSpider_internal.py
     rm -rf *so
-    rm -rf kSpider.egg-info/
+    rm -rf pykSpider/kSpider2.egg-info/
     rm -rf build/bdist.linux-x86_64
 }
 
-#trap cleanup EXIT
+trap cleanup EXIT
 cleanup
 
 # Build the project if not already built
@@ -38,15 +38,15 @@ cd dist/
 
 $(which python) -m pip uninstall kSpider2 -y
 
-$(which python) -m pip install kSpider*cp*.whl
+$(which python) -m pip install kSpider2*cp*.whl
 
-#rm -rf build/temp
-#rm -rf build/lib.linux*
-#rm -rf __pycache__/
-#rm -rf *cxx
-#rm -rf *pyc
-#rm -rf src/swig_interfaces/kSpider_internal_wrap.cpp
-#rm -rf pykSpider/kSpider_internal.py
-#rm -rf *so
-#rm -rf kSpider.egg-info/
-#rm -rf build/bdist.linux-x86_64
+rm -rf build/temp
+rm -rf build/lib.linux*
+rm -rf __pycache__/
+rm -rf *cxx
+rm -rf *pyc
+rm -rf src/swig_interfaces/kSpider_internal_wrap.cpp
+rm -rf kSpider_internal.py
+rm -rf *so
+rm -rf pykSpider/kSpider2.egg-info/
+rm -rf build/bdist.linux-x86_64
