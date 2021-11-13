@@ -137,6 +137,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 
 from setuptools.command.build_py import build_py
@@ -145,9 +146,9 @@ class BuildPy(build_py):
         self.run_command('build_ext')
         super(build_py, self).run()
 
-setup(name='kSpider2',
-      version="2.0.1",
-      description="""kSpider Python interface""",
+setup(name='kSpider',
+      version="2.1.0",
+      description="""A simple yet powerful sequence clustering tool""",
       ext_modules=[kSpider_module],
       py_modules=['kSpider_internal'],
       packages=find_packages('pykSpider'),
@@ -164,11 +165,11 @@ setup(name='kSpider2',
       include_package_data=True,
       entry_points='''
         [console_scripts]
-        kSpider2=kSpider2:cli
+        kSpider=kSpider2:cli
     ''',
       project_urls={
-          'Bug Reports': 'https://github.com/mr-eyes/kSpider2/issues',
-          'Source': 'https://github.com/mr-eyes/kSpider2/issues',
+          'Bug Reports': 'https://github.com/mr-eyes/kSpider/issues',
+          'Source': 'https://github.com/mr-eyes/kSpider/issues',
       },
       )
 
