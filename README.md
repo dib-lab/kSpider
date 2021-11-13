@@ -21,7 +21,7 @@
 - [➤ Introduction](#-introduction)
 - [➤ Quick Installation (pip)](#-quick_installation)
 - [➤ Build from source](#-build_source)
-- [➤ Contributors](#-contributors)
+- [➤ Authors](#-authors)
 - [➤ License](#-license)
 
 </details>
@@ -61,9 +61,9 @@ bash build_wrapper.sh
 ```
 
 
-[![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#contributors)
+[![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#authors)
 
-## ➤ Contributors
+## ➤ Authors
 
 | [<img alt="You?" src="https://avatars2.githubusercontent.com/u/7165864?s=460&&v=4" width="100">](https://github.com/mr-eyes) | [<img alt="Tamer Mansour" src="https://avatars3.githubusercontent.com/u/6537740?s=400&&v=4" width="100">](https://github.com/drtamermansour) |
 |------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
