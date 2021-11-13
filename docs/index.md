@@ -46,18 +46,6 @@ TR4|GENE2	GENE2
 pip install kSpider
 ```
 
-### Manual Installation / Development
-
-```bash
-
-Clone and build
-git clone https://github.com/mr-eyes/kSpider.git
-cd kSpider
-cmake -Bbuild
-cmake --build build
-bash build_wrapper.sh
-```
-
 ---
 
 ## Indexing
@@ -66,7 +54,6 @@ kSpider supports 3 main indexing mode.
 1. Kmers mode, where you can select the kmer size.
 2. Skipmers mode, where you need to provide m,n,k values. Read more at https://www.biorxiv.org/content/10.1101/179960v2
 3. Protein mode, where you can set a kSize up to 11 amino acid in the default mode, or 19 amino acid in the dayhoff mode.
-
 
 
 ## Usage Example
