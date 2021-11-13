@@ -32,6 +32,8 @@
 
 **kSpider** is a user-friendly command line interface program to perform sequence clustering. First, it creates an index using kProcessor for the source sequences. Second, it constructs a pairwise containment matrix through a single iteration over the index. Finally, it builds a graph from the pairwise matrix and applies a connected-components graph algorithm to extract the clusters with a user-defined containment threshold.
 
+Documentations are hosted at [https://mr-eyes.github.io/kSpider](https://mr-eyes.github.io/kSpider)
+
 
 [![-----------------------------------------------------](https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/colored.png)](#quick_installation)
 
