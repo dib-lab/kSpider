@@ -23,7 +23,7 @@ def validate_names(ctx, names_file):
             if len(line.strip().split("\t")) != 2:
                 ctx.obj.ERROR(
                     f"invalid names line detected at L{i}: '{line.strip()}'")
-                
+
 
 @cli.command(name="index_kmers", help_priority=1)
 @click.option('-f', '--fasta', "fasta_file", required=True, type=click.Path(exists=True), help="FASTA file")
@@ -90,7 +90,7 @@ def skipmers(ctx, fasta_file, names_file, skipmers_kSize, skipmers_m, skipmers_n
 @click.option('-n', '--names', "names_file", required=True, type=click.Path(exists=True), help="Names file")
 @click.option('-k', '--kmer-size', "kSize", required=True, type=click.IntRange(7, 31, clamp=False), help="kmer size")
 @click.option('-c', '--chunk-size', "chunk_size", required=False, type=click.INT, default=3000, help="chunk size")
-@click.option('--dayhoff', "dayhoff", is_flag=True)
+@click.option('--dayhoff', "dayhoff", is_flag=True, show_default=True, default=False, help="use Dayhoff encoding")
 @click.option('-o', '--output', "output_prefix", required=False, default=None, help="index output file prefix")
 @click.pass_context
 def protein(ctx, fasta_file, names_file, kSize, output_prefix, chunk_size, dayhoff):
