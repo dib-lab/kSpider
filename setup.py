@@ -47,6 +47,7 @@ def check_exist(dirs):
 SOURCES = [
     'src/swig_interfaces/kSpider_internal.i',
     'lib/kProcessor/src/kDataFrames/kDataFrame.cpp',
+    'lib/kProcessor/src/algorithms.cpp',
 ]
 
 if not find_executable('swig'):
@@ -60,6 +61,7 @@ INCLUDES = [
     'lib/kProcessor/ThirdParty/kmerDecoder/include',
     'lib/kProcessor/ThirdParty/kmerDecoder/lib/kseq/include',
     'lib/kProcessor/ThirdParty/sdsl-lite/include',
+    'lib/kProcessor/ThirdParty/ntCard/include',
     'lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap',
 ]
 
@@ -79,6 +81,7 @@ LIBRARIES_DIRS = [
     f"{kSpider_BUILD_DIR_dir}/lib/kProcessor",
     f"{kSpider_BUILD_DIR_dir}",
     f"{kSpider_BUILD_DIR_dir}/lib/kProcessor/ThirdParty/MQF/src",
+    "lib/kProcessor/ThirdParty/ntCard",
     f"{kSpider_BUILD_DIR_dir}/lib/kProcessor/ThirdParty/sdsl-lite/lib",
     f"{kSpider_BUILD_DIR_dir}/lib/kProcessor/ThirdParty/kmerDecoder",
     f"{kSpider_BUILD_DIR_dir}/lib/kProcessor/ThirdParty/MQF/ThirdParty/stxxl/lib",
@@ -91,6 +94,7 @@ LIBRARIES = [
     'kSpider',
     'sdsl',
     'MQF',
+    'ntcard',
     'kmerDecoder',
     'stxxl_debug',
 ]

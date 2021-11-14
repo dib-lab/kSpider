@@ -6,21 +6,20 @@ import sys
 
 import _kSpider_internal as kSpider_internal
 
-# try:
-#     import pykSpider.kSpider_internal
-# except ImportError:
-#     print("kSpider_internal is not built yet", file = sys.stderr)
-
 import click
 from kSpider2.click_context import cli
 
 
-@cli.command(name = "pairwise", help_priority=1)
+@cli.command(name="pairwise", help_priority=4)
 @click.option('-i', '--index-prefix', required=True, type=click.STRING, help="kProcessor index file prefix")
 @click.pass_context
 def main(ctx, index_prefix):
     """
-    Generating containment pairwise matrix for kProcessor index.
+    Generate containment pairwise matrix.
     """
 
+    ctx.obj.INFO("Constructing the containment pairwise matrix.")
+
     kSpider_internal.pairwise(index_prefix)
+
+    ctx.obj.SUCCESS("Done.")

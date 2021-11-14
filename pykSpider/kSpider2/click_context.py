@@ -1,5 +1,5 @@
 import click
-
+from kSpider2.customLogger import Logger
 
 class SpecialHelpOrder(click.Group):
 
@@ -38,4 +38,5 @@ class SpecialHelpOrder(click.Group):
 @click.option('-q', '--quiet', default=False, is_flag=True)
 @click.pass_context
 def cli(ctx, quiet):
+    ctx.obj = Logger(quiet)
     pass
