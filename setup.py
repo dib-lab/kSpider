@@ -168,8 +168,8 @@ setup(name='kSpider',
         kSpider=kSpider2:cli
     ''',
       project_urls={
-          'Bug Reports': 'https://github.com/mr-eyes/kSpider/issues',
-          'Source': 'https://github.com/mr-eyes/kSpider/issues',
+          'Bug Reports': 'https://github.com/dib-lab/kSpider/issues',
+          'Source': 'https://github.com/dib-lab/kSpider/issues',
       },
       )
 
