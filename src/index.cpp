@@ -45,38 +45,100 @@ namespace kSpider {
 
     void index_datasets(string kfs_dir) {
 
-        kDataFrame * frame;
+
+        auto * frame = new kDataFramePHMAP();
+        
         
         
         std::filesystem::path dirname(kfs_dir);
-        string dir_prefix = dirname.parent_path().filename();
+        string dir_prefix = dirname.filename();
 
-        for (const auto& dirEntry : recursive_directory_iterator(kfs_dir)) {
-            string file_name = (string)dirEntry.path();
-            size_t lastindex = file_name.find_last_of(".");
-            string kf_prefix = file_name.substr(0, lastindex);
-            auto * _kf = kDataFrame::load(kf_prefix);
-            std::string::size_type idx;
-            idx = file_name.rfind('.');
-            std::string extension = "";
-            if(idx != std::string::npos) extension = file_name.substr(idx+1);
+        // for (const auto& dirEntry : recursive_directory_iterator(kfs_dir)) {
+        //     string file_name = (string)dirEntry.path();
+        //     size_t lastindex = file_name.find_last_of(".");
+        //     string kf_prefix = file_name.substr(0, lastindex);
 
-            if(extension == "mqf") frame = new kDataFrameMQF(_kf->getkSize());
-            else if (extension == "phmap") frame = new kDataFramePHMAP(_kf->getkSize());
 
-        }
-        
+        //     std::string::size_type idx;
+        //     idx = file_name.rfind('.');
+        //     std::string extension = "";
+        //     if(idx != std::string::npos) extension = file_name.substr(idx+1);
+
+        //     if(extension == "mqf") { 
+        //         cout << "mqf kframes detected." << endl;
+        //         auto * _kf = kDataFrame::load(kf_prefix);
+        //         auto *_KD = _kf->getkmerDecoder();
+        //         frame = new kDataFrameMQF(_KD->slicing_mode, _KD->hash_mode, {{"kSize", _KD->get_kSize()}});
+        //         break;
+        //     }else if (extension == "phmap") {
+        //         auto * _kf = kDataFrame::load(kf_prefix);
+        //         cout << "phmap kframes detected." << endl;
+        //         auto *_KD = _kf->getkmerDecoder();
+        //         frame = new kDataFrameMQF(31, 32, integer_hasher);
+        //         break;
+        //     }else{
+        //         continue;
+        //     }
+
+        // }
+
+
+        // ----------------------------------------------------------------
 
         flat_hash_map<string, string> namesMap;
+        string names_fileName = kfs_dir;
+
         flat_hash_map<string, uint64_t> tagsMap;
         flat_hash_map<string, uint64_t> groupNameMap;
-        auto* legend = new flat_hash_map<uint64_t, std::vector<uint32_t>>();
+        flat_hash_map<uint64_t, std::vector<uint32_t>> *legend = new flat_hash_map<uint64_t, std::vector<uint32_t>>();
         flat_hash_map<uint64_t, uint64_t> colorsCount;
         uint64_t readID = 0, groupID = 1;
         string seqName, groupName;
         string line;
         priority_queue<uint64_t, vector<uint64_t>, std::greater<uint64_t>> freeColors;
         flat_hash_map<string, uint64_t> groupCounter;
+
+        int total_kfs_number = 0;
+
+        for (const auto& dirEntry : recursive_directory_iterator(kfs_dir)) {
+            string file_name = (string)dirEntry.path();
+            size_t lastindex = file_name.find_last_of(".");
+            string kf_prefix = file_name.substr(0, lastindex);
+
+            
+            std::string::size_type idx;
+            idx = file_name.rfind('.');
+            std::string extension = "";
+            if(idx != std::string::npos) extension = file_name.substr(idx+1);
+            if(extension != "mqf" and extension != "phmap") continue;
+
+            total_kfs_number++;
+
+            std::filesystem::path kf_path(kf_prefix);
+            string kf_basename = kf_path.filename();
+
+            seqName = kf_basename;
+            groupName = kf_basename;
+            namesMap.insert(make_pair(seqName, groupName));
+            auto it = groupNameMap.find(groupName);
+            groupCounter[groupName]++;
+            if (it == groupNameMap.end()) {
+                groupNameMap.insert(make_pair(groupName, groupID));
+                tagsMap.insert(make_pair(to_string(groupID), groupID));
+                vector<uint32_t> tmp;
+                tmp.clear();
+                tmp.push_back(groupID);
+                legend->insert(make_pair(groupID, tmp));
+                colorsCount.insert(make_pair(groupID, 0));
+                groupID++;
+
+            }
+        }
+
+
+
+        // ----------------------------------------------------------------
+
 
         flat_hash_map<uint64_t, string> inv_groupNameMap;
         for (auto& _ : groupNameMap)
@@ -94,24 +156,32 @@ namespace kSpider {
         readID = 0;
         int __batch_count = 0;
 
+        int processed_kfs_count = 0;
+
         for (const auto& dirEntry : recursive_directory_iterator(kfs_dir)) {
 
             string file_name = (string)dirEntry.path();
             size_t lastindex = file_name.find_last_of(".");
             string kf_prefix = file_name.substr(0, lastindex);
-            auto * loaded_kf = kDataFrame::load(kf_prefix);
+
+            std::filesystem::path kf_path(kf_prefix);
+            string kf_basename = kf_path.filename();
             
+            
+            std::string::size_type idx;
+            idx = file_name.rfind('.');
+            std::string extension = "";
+            if(idx != std::string::npos) extension = file_name.substr(idx+1);
+            if(extension != "mqf" and extension != "phmap") continue;
+            
+            auto * loaded_kf = kDataFrame::load(kf_prefix);
+            cout << "Processing " << ++processed_kfs_count << "/" << total_kfs_number << " | " << kf_basename << " k:" << loaded_kf->ksize() << " ..." << endl;
 
             flat_hash_map<uint64_t, uint64_t> convertMap;
-            string readName = kf_prefix;
+            string readName = kf_basename;
             auto loaded_kf_it = loaded_kf->begin();
 
-                auto it = namesMap.find(readName);
-                if (it == namesMap.end()) {
-                    continue;
-                    // cout << "read " << readName << "dont have group. Please check the group names file." << endl;
-                }
-                string groupName = it->second;
+                string groupName = kf_basename;
 
                 uint64_t readTag = groupNameMap.find(groupName)->second;
 
@@ -193,7 +263,7 @@ namespace kSpider {
                             << itc->second << " found " << frame->getCount(hashed_kmer) << endl;
                         exit(1);
                     }
-                    it++;
+                    loaded_kf_it++;
                 }
                 readID += 1;
                 groupCounter[groupName]--;
@@ -204,8 +274,7 @@ namespace kSpider {
                     }
                     
                 }
-                
-            
+                delete loaded_kf;
         }
 
 
@@ -222,11 +291,8 @@ namespace kSpider {
             res->namesMap[sampleID] = iit->second;
             res->namesMapInv[iit->second] = sampleID;
         }
-
+        cout << "saving to "<< dir_prefix << " ..." << endl;
         res->save(dir_prefix);
     }
-
-
-
 
 }

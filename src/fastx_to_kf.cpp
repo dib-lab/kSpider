@@ -94,8 +94,11 @@ namespace kSpider {
             flat_hash_map<std::string, std::vector<kmer_row>>::iterator seq1_end = READ_1_KMERS->getKmers()->end();
 
             while (seq1 != seq1_end) {
-                auto* kf = new kDataFrameMQF(KMERS, mumur_hasher, { {"kSize", kSize} });
-                for (auto const kRow : seq1->second) kf->insert(kRow.hash);
+                auto* kf = new kDataFrameMQF(KMERS, integer_hasher, { {"kSize", kSize} });
+                for (auto const kRow : seq1->second) {
+                    // downsampling
+                    if (kRow.hash < 147573952589676412) kf->insert(kRow.hash);
+                }
                 kf->save(base_filename);
                 seq1++;
             }
@@ -122,32 +125,25 @@ namespace kSpider {
         string PE_1_reads_file = r1_file_name;
 
         hashingModes hasher_type = protein_hasher;
-        if(is_dayhoff) hasher_type = proteinDayhoff_hasher;
+        if (is_dayhoff) hasher_type = proteinDayhoff_hasher;
 
-        kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, PROTEIN, hasher_type, { {"kSize", kSize} });
+        kmerDecoder* KD = kmerDecoder::getInstance(r1_file_name, chunk_size, PROTEIN, hasher_type, { {"kSize", kSize} });
+        kDataFramePHMAP * kf = new kDataFramePHMAP(PROTEIN, hasher_type, { {"kSize", kSize} });
 
-        int Reads_chunks_counter = 0;
 
+        while (!KD->end()) {
+            KD->next_chunk();
 
-        while (!READ_1_KMERS->end()) {
-
-            READ_1_KMERS->next_chunk();
-
-            flat_hash_map<std::string, std::vector<kmer_row>>::iterator seq1 = READ_1_KMERS->getKmers()->begin();
-            flat_hash_map<std::string, std::vector<kmer_row>>::iterator seq1_end = READ_1_KMERS->getKmers()->end();
-
-            while (seq1 != seq1_end) {
-                auto* kf = new kDataFramePHMAP(PROTEIN, hasher_type, { {"kSize", kSize} });
-
-                for (auto const kRow : seq1->second){
-                    kf->insert(kRow.hash);
+            for (const auto& seq : *KD->getKmers()) {
+                for (const auto& kmer : seq.second) {
+                    // Downsampling
+                    kf->insert(kmer.hash);
+                    // if (kmer.hash < 147573952589676412) kf->insert(kmer.hash); else continue;
                 }
-                
-                kf->save(output_prefix);
-                seq1++;
             }
-
         }
+
+        kf->save(output_prefix);
 
     }
 
