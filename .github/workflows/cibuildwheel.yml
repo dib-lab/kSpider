@@ -4,10 +4,10 @@ on:
   push:
     branches:
       - master
+      - pag
   pull_request:
     branches:
       - master
-      - pag
 
 jobs:
   build_wheels:
