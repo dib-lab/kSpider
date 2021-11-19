@@ -122,6 +122,8 @@ namespace kSpider {
 
     void protein_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, bool is_dayhoff, string output_prefix) {
 
+        uint64_t max_hash = (kSize * 5) / 250;
+
         string PE_1_reads_file = r1_file_name;
 
         hashingModes hasher_type = protein_hasher;
@@ -137,8 +139,8 @@ namespace kSpider {
             for (const auto& seq : *KD->getKmers()) {
                 for (const auto& kmer : seq.second) {
                     // Downsampling
-                    kf->insert(kmer.hash);
-                    // if (kmer.hash < 147573952589676412) kf->insert(kmer.hash); else continue;
+                    // kf->insert(kmer.hash);
+                    if (kmer.hash < max_hash) kf->insert(kmer.hash); else continue;
                 }
             }
         }
