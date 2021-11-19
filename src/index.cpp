@@ -6,8 +6,42 @@
 #include "parallel_hashmap/phmap.h"
 #include "kDataFrame.hpp"
 #include "algorithms.hpp"
-#include <filesystem>
-using recursive_directory_iterator = std::filesystem::recursive_directory_iterator;
+#include <glob.h> // glob(), globfree()
+#include <vector>
+#include <stdexcept>
+#include <sstream>
+#include <string.h>
+
+
+// thanks to https://stackoverflow.com/a/8615450/3371177
+std::vector<std::string> glob(const std::string& pattern) {
+    using namespace std;
+
+    // glob struct resides on the stack
+    glob_t glob_result;
+    memset(&glob_result, 0, sizeof(glob_result));
+
+    // do the glob operation
+    int return_value = glob(pattern.c_str(), GLOB_TILDE, NULL, &glob_result);
+    if(return_value != 0) {
+        globfree(&glob_result);
+        stringstream ss;
+        ss << "glob() failed with return_value " << return_value << endl;
+        throw std::runtime_error(ss.str());
+    }
+
+    // collect all the filenames into a std::list<std::string>
+    vector<string> filenames;
+    for(size_t i = 0; i < glob_result.gl_pathc; ++i) {
+        filenames.push_back(string(glob_result.gl_pathv[i]));
+    }
+
+    // cleanup
+    globfree(&glob_result);
+
+    // done
+    return filenames;
+}
 
 
 namespace kSpider {
@@ -47,11 +81,7 @@ namespace kSpider {
 
 
         auto * frame = new kDataFramePHMAP();
-        
-        
-        
-        std::filesystem::path dirname(kfs_dir);
-        string dir_prefix = dirname.filename();
+        std::string dir_prefix = kfs_dir.substr(kfs_dir.find_last_of("/\\") + 1);
 
         // for (const auto& dirEntry : recursive_directory_iterator(kfs_dir)) {
         //     string file_name = (string)dirEntry.path();
@@ -100,8 +130,8 @@ namespace kSpider {
 
         int total_kfs_number = 0;
 
-        for (const auto& dirEntry : recursive_directory_iterator(kfs_dir)) {
-            string file_name = (string)dirEntry.path();
+        for (const auto& dirEntry : glob(kfs_dir + "/*")) {
+            string file_name = (string)dirEntry;
             size_t lastindex = file_name.find_last_of(".");
             string kf_prefix = file_name.substr(0, lastindex);
 
@@ -114,8 +144,7 @@ namespace kSpider {
 
             total_kfs_number++;
 
-            std::filesystem::path kf_path(kf_prefix);
-            string kf_basename = kf_path.filename();
+            std::string kf_basename = kf_prefix.substr(kf_prefix.find_last_of("/\\") + 1);
 
             seqName = kf_basename;
             groupName = kf_basename;
@@ -158,14 +187,12 @@ namespace kSpider {
 
         int processed_kfs_count = 0;
 
-        for (const auto& dirEntry : recursive_directory_iterator(kfs_dir)) {
-
-            string file_name = (string)dirEntry.path();
+        for (const auto& dirEntry : glob(kfs_dir + "/*")) {
+            string file_name = (string)dirEntry;
             size_t lastindex = file_name.find_last_of(".");
             string kf_prefix = file_name.substr(0, lastindex);
 
-            std::filesystem::path kf_path(kf_prefix);
-            string kf_basename = kf_path.filename();
+            std::string kf_basename = kf_prefix.substr(kf_prefix.find_last_of("/\\") + 1);
             
             
             std::string::size_type idx;
