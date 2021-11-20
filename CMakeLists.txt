@@ -12,7 +12,7 @@ project (
 )
 
 set(default_build_type "Release")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC -lgomp -lrt -fopenmp -pedantic -O3 -Ofast")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++fs -fPIC -lgomp -lrt -fopenmp -pedantic -O3 -Ofast")
 # ----------------------------------------------------------------------------
 # kProcessor Setup
 # ----------------------------------------------------------------------------
