@@ -49,7 +49,7 @@ if BOOL_PAIRED_END:
     
     for i in range(len(read_groups)):
         pwd = os.path.abspath(os.getcwd())
-        dir_name = f"{subdir_prefix}_{(i+1):02d}"
+        dir_name = os.path.join(pwd, f"{subdir_prefix}_{(i+1):02d}")
         os.mkdir(dir_name)
         for r1, r2 in read_groups[i]:
             r1 = os.path.abspath(r1)
