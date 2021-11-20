@@ -57,6 +57,7 @@ def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_r
     elif single_end_flag:
         kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size, downsampling_ration)
     else:
-        ctx.obj.ERROR("paired-end is not implemented yet")
+        print("Processing paired-end")
+        kSpider_internal.paired_end_to_kDataFrame(r1, r2, kSize, chunk_size, downsampling_ration)
                     
     ctx.obj.SUCCESS("File(s) has been converted.")

@@ -23,16 +23,17 @@ namespace kSpider {
 
         kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
         kmerDecoder* READ_2_KMERS = kmerDecoder::getInstance(r2_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
-        auto* kf = new kDataFrameMQF(KMERS, mumur_hasher, { {"kSize", kSize} });
+        auto* kf = new kDataFrameMQF(KMERS, mumur_hasher, {{"kSize", kSize}});
 
         int Reads_chunks_counter = 0;
         uint64_t max_real_hash = READ_1_KMERS->hasher->hash(pow(2, kSize));
-        uint64_t max_hash = max_real_hash / downsampling_ration;
+        uint64_t max_hash = 18446744073709551616 / downsampling_ration;
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
 
 
         while (!READ_1_KMERS->end() && !READ_2_KMERS->end()) {
+
 
             READ_1_KMERS->next_chunk();
             READ_2_KMERS->next_chunk();
@@ -77,6 +78,7 @@ namespace kSpider {
 
         }
         kf->save(base_filename);
+        cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ")" << endl;
     }
 
     void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ration) {
@@ -121,6 +123,7 @@ namespace kSpider {
         }
 
         kf->save(base_filename);
+        cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ")" << endl;
 
     }
 
