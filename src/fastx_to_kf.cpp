@@ -26,8 +26,7 @@ namespace kSpider {
         auto* kf = new kDataFrameMQF(KMERS, mumur_hasher, {{"kSize", kSize}});
 
         int Reads_chunks_counter = 0;
-        uint64_t max_real_hash = READ_1_KMERS->hasher->hash(pow(2, kSize));
-        uint64_t max_hash = 18446744073709551616 / downsampling_ration;
+        uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ration;
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
 
@@ -88,13 +87,13 @@ namespace kSpider {
         std::string base_filename = PE_1_reads_file.substr(PE_1_reads_file.find_last_of("/\\") + 1);
         base_filename = base_filename.substr(0, base_filename.find('_'));
 
-        kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, integer_hasher, { {"kSize", kSize} });
-        auto* kf = new kDataFrameMQF(KMERS, integer_hasher, { {"kSize", kSize} });
+        kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
+        auto* kf = new kDataFrameMQF(KMERS, mumur_hasher, { {"kSize", kSize} });
 
         int Reads_chunks_counter = 0;
 
         uint64_t max_real_hash = READ_1_KMERS->hasher->hash(pow(2, kSize));
-        uint64_t max_hash = max_real_hash / downsampling_ration;
+        uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ration;
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
 
