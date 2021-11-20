@@ -13,7 +13,7 @@
 
 namespace kSpider {
 
-    void paired_end_to_kDataFrame(string r1_file_name, string r2_file_name, int kSize, int chunk_size) {
+    void paired_end_to_kDataFrame(string r1_file_name, string r2_file_name, int kSize, int chunk_size, int downsampling_ration) {
 
         string PE_1_reads_file = r1_file_name;
         string PE_2_reads_file = r2_file_name;
@@ -23,14 +23,16 @@ namespace kSpider {
 
         kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
         kmerDecoder* READ_2_KMERS = kmerDecoder::getInstance(r2_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
+        auto* kf = new kDataFrameMQF(KMERS, mumur_hasher, { {"kSize", kSize} });
 
         int Reads_chunks_counter = 0;
+        uint64_t max_real_hash = READ_1_KMERS->hasher->hash(pow(2, kSize));
+        uint64_t max_hash = max_real_hash / downsampling_ration;
+        uint64_t total_kmers = 0;
+        uint64_t inserted_kmers = 0;
 
 
         while (!READ_1_KMERS->end() && !READ_2_KMERS->end()) {
-
-            cerr << "processing chunk: (" << ++Reads_chunks_counter << "...";
-            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
             READ_1_KMERS->next_chunk();
             READ_2_KMERS->next_chunk();
@@ -43,36 +45,41 @@ namespace kSpider {
 
             while (seq1 != seq1_end && seq2 != seq2_end) {
 
-                auto* kf = new kDataFrameMQF(KMERS, mumur_hasher, { {"kSize", kSize} });
+                for (auto const kRow : seq1->second) {
+                    if (kRow.hash < max_hash) {
+                        kf->insert(kRow.hash);
+                        total_kmers++;
+                        inserted_kmers++;
+                    }
+                    else {
+                        total_kmers++;
+                        continue;
+                    }
+                }
 
-                for (auto const kRow : seq1->second) kf->insert(kRow.hash);
-                for (auto const kRow : seq2->second) kf->insert(kRow.hash);
 
-                kf->save(base_filename);
+                for (auto const kRow : seq2->second) {
+                    if (kRow.hash < max_hash) {
+                        kf->insert(kRow.hash);
+                        total_kmers++;
+                        inserted_kmers++;
+                    }
+                    else {
+                        total_kmers++;
+                        continue;
+                    }
+                }
 
                 seq1++;
                 seq2++;
 
-                delete kf;
             }
 
-
-            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-            auto milli = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-            long hr = milli / 3600000;
-            milli = milli - 3600000 * hr;
-            long min = milli / 60000;
-            milli = milli - 60000 * min;
-            long sec = milli / 1000;
-            milli = milli - 1000 * sec;
-            cerr << "Done in: ";
-            cerr << min << ":" << sec << ":" << milli << endl;
-
         }
-
+        kf->save(base_filename);
     }
 
-    void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size) {
+    void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ration) {
 
         string PE_1_reads_file = r1_file_name;
 
@@ -80,27 +87,22 @@ namespace kSpider {
         base_filename = base_filename.substr(0, base_filename.find('_'));
 
         kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, integer_hasher, { {"kSize", kSize} });
+        auto* kf = new kDataFrameMQF(KMERS, integer_hasher, { {"kSize", kSize} });
 
         int Reads_chunks_counter = 0;
 
-        uint64_t downsampling_ration = 250;
-        uint64_t max_hash = UINT64_MAX / downsampling_ration;
+        uint64_t max_real_hash = READ_1_KMERS->hasher->hash(pow(2, kSize));
+        uint64_t max_hash = max_real_hash / downsampling_ration;
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
 
         while (!READ_1_KMERS->end()) {
-
-            cerr << "processing chunk: (" << ++Reads_chunks_counter << "...";
-            std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-
             READ_1_KMERS->next_chunk();
-
 
             flat_hash_map<std::string, std::vector<kmer_row>>::iterator seq1 = READ_1_KMERS->getKmers()->begin();
             flat_hash_map<std::string, std::vector<kmer_row>>::iterator seq1_end = READ_1_KMERS->getKmers()->end();
 
             while (seq1 != seq1_end) {
-                auto* kf = new kDataFrameMQF(KMERS, integer_hasher, { {"kSize", kSize} });
                 for (auto const kRow : seq1->second) {
                     // downsampling
                     if (kRow.hash < max_hash) {
@@ -113,28 +115,17 @@ namespace kSpider {
                         continue;
                     }
                 }
-                kf->save(base_filename);
                 seq1++;
             }
 
-
-            std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-            auto milli = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-            long hr = milli / 3600000;
-            milli = milli - 3600000 * hr;
-            long min = milli / 60000;
-            milli = milli - 60000 * min;
-            long sec = milli / 1000;
-            milli = milli - 1000 * sec;
-            cerr << "Done in: ";
-            cerr << min << ":" << sec << ":" << milli << endl;
-
         }
+
+        kf->save(base_filename);
 
     }
 
 
-    void protein_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, bool is_dayhoff, string output_prefix) {
+    void protein_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, bool is_dayhoff, string output_prefix, int downsampling_ration) {
 
         string PE_1_reads_file = r1_file_name;
 
@@ -150,9 +141,6 @@ namespace kSpider {
         auto* INT_HASHER = new IntegerHasher(hashing_kmer_kSize);
         uint64_t max_real_hash = INT_HASHER->hash(pow(2, hashing_kmer_kSize));
 
-
-
-        uint64_t downsampling_ration = 250;
         uint64_t max_hash = max_real_hash / downsampling_ration;
 
         uint64_t total_kmers = 0;

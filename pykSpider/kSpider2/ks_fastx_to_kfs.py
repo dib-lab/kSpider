@@ -17,8 +17,9 @@ import os
 @click.option('--r2', "r2", type=click.Path(exists=True), help = "paired-end FASTX R2 file", required= False)
 @click.option('--protein', "protein", is_flag=True, show_default=True, default=False, help="parsing protein")
 @click.option('--dayhoff', "dayhoff", is_flag=True, show_default=True, default=False, help="parsing protein in dayhoff encoding")
+@click.option('-s', '--scale', "downsampling_ration", required=False, default = 1, help="Downsampling ratio")
 @click.pass_context
-def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff):
+def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_ration):
     """
     Convert all files in a directory to kDataFrames
     """
@@ -50,11 +51,11 @@ def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff):
         single_end_flag = True
 
     if protein_flag:
-        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, False, os.path.basename(fastx))
+        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, False, os.path.basename(fastx), downsampling_ration)
     elif dayhoff_flag:
-        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, True, os.path.basename(fastx))
+        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, True, os.path.basename(fastx), downsampling_ration)
     elif single_end_flag:
-        kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size)
+        kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size, downsampling_ration)
     else:
         ctx.obj.ERROR("paired-end is not implemented yet")
                     
