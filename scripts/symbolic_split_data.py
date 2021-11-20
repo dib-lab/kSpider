@@ -1,7 +1,5 @@
 """[summary]
-You have so many sequence files and want to split in subdirs for parallelization?
-This script for you.
-Pass your folder of intrest, it will split all the data into for i in range(x): mkdir ${subdir}_i.
+You have so many sequence files and want to split in subdirs for parallelization?, Then, this script for you.
 
 [ ] Support paired-end
 [ ] Support single end.
@@ -50,9 +48,12 @@ if BOOL_PAIRED_END:
     subdir_prefix = os.path.dirname(sys.argv[3])
     
     for i in range(len(read_groups)):
-        dir_name = f"{subdir_prefix}_{i+1}"
+        pwd = os.path.abspath(os.getcwd())
+        dir_name = os.path.join(pwd, f"{subdir_prefix}_{i+1}")
         os.mkdir(dir_name)
         for r1, r2 in read_groups[i]:
+            r1 = os.path.abspath(r1)
+            r2 = os.path.abspath(r2)
             ln_r1 = os.path.join(dir_name, os.path.basename(r1))
             ln_r2 = os.path.join(dir_name, os.path.basename(r2))
                    
@@ -61,6 +62,4 @@ if BOOL_PAIRED_END:
             os.symlink(r1, ln_r1)
             os.symlink(r2, ln_r2)
 
-    print("splitting done successfully")            
-    
-    
+    print("splitting done successfully")     
