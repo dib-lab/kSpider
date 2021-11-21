@@ -107,8 +107,9 @@ namespace kSpider {
             idx = file_name.rfind('.');
             std::string extension = "";
             if(idx != std::string::npos) extension = file_name.substr(idx+1);
-            if(extension == "mqf") {frame = new kDataFrameMQF(kDataFrame::load(kf_prefix)->getkSize()); break;}
-            else if(extension == "mqf") {frame = new kDataFramePHMAP(kDataFrame::load(kf_prefix)->getkSize()); break;}
+            int detected_kSize = kDataFrame::load(kf_prefix)->getkSize();
+            if(extension == "mqf") {frame = new kDataFrameMQF(detected_kSize); break;}
+            else if(extension == "phmap") {frame = new kDataFramePHMAP(detected_kSize); break;}
             else {continue;}
         }
 
@@ -184,7 +185,7 @@ namespace kSpider {
             if(extension != "mqf" and extension != "phmap") continue;
             
             auto * loaded_kf = kDataFrame::load(kf_prefix);
-            cout << "Processing " << ++processed_kfs_count << "/" << total_kfs_number << " | " << kf_basename << " k:" << loaded_kf->ksize() << " ..." << endl;
+            cout << "Processing " << ++processed_kfs_count << "/" << total_kfs_number << " | " << kf_basename << " k:" << loaded_kf->ksize() << " ... ";
 
             flat_hash_map<uint64_t, uint64_t> convertMap;
             string readName = kf_basename;
@@ -283,6 +284,7 @@ namespace kSpider {
                     }
                     
                 }
+                cout << "saved_kmers(~" << frame->size() << ")." << endl;
                 delete loaded_kf;
         }
 
