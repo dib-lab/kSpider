@@ -80,40 +80,8 @@ namespace kSpider {
     void index_datasets(string kfs_dir) {
 
 
-        auto * frame = new kDataFramePHMAP();
+        kDataFrame * frame;
         std::string dir_prefix = kfs_dir.substr(kfs_dir.find_last_of("/\\") + 1);
-
-        // for (const auto& dirEntry : recursive_directory_iterator(kfs_dir)) {
-        //     string file_name = (string)dirEntry.path();
-        //     size_t lastindex = file_name.find_last_of(".");
-        //     string kf_prefix = file_name.substr(0, lastindex);
-
-
-        //     std::string::size_type idx;
-        //     idx = file_name.rfind('.');
-        //     std::string extension = "";
-        //     if(idx != std::string::npos) extension = file_name.substr(idx+1);
-
-        //     if(extension == "mqf") { 
-        //         cout << "mqf kframes detected." << endl;
-        //         auto * _kf = kDataFrame::load(kf_prefix);
-        //         auto *_KD = _kf->getkmerDecoder();
-        //         frame = new kDataFrameMQF(_KD->slicing_mode, _KD->hash_mode, {{"kSize", _KD->get_kSize()}});
-        //         break;
-        //     }else if (extension == "phmap") {
-        //         auto * _kf = kDataFrame::load(kf_prefix);
-        //         cout << "phmap kframes detected." << endl;
-        //         auto *_KD = _kf->getkmerDecoder();
-        //         frame = new kDataFrameMQF(31, 32, integer_hasher);
-        //         break;
-        //     }else{
-        //         continue;
-        //     }
-
-        // }
-
-
-        // ----------------------------------------------------------------
 
         flat_hash_map<string, string> namesMap;
         string names_fileName = kfs_dir;
@@ -129,6 +97,20 @@ namespace kSpider {
         flat_hash_map<string, uint64_t> groupCounter;
 
         int total_kfs_number = 0;
+
+        // get kSize and type
+         for (const auto& dirEntry : glob(kfs_dir + "/*")) {
+            string file_name = (string)dirEntry;
+            size_t lastindex = file_name.find_last_of(".");
+            string kf_prefix = file_name.substr(0, lastindex);
+            std::string::size_type idx;
+            idx = file_name.rfind('.');
+            std::string extension = "";
+            if(idx != std::string::npos) extension = file_name.substr(idx+1);
+            if(extension == "mqf") {frame = new kDataFrameMQF(kDataFrame::load(kf_prefix)->getkSize()); break;}
+            else if(extension == "mqf") {frame = new kDataFramePHMAP(kDataFrame::load(kf_prefix)->getkSize()); break;}
+            else {continue;}
+        }
 
         for (const auto& dirEntry : glob(kfs_dir + "/*")) {
             string file_name = (string)dirEntry;
