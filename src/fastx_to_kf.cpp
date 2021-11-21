@@ -13,7 +13,7 @@
 
 namespace kSpider {
 
-    void paired_end_to_kDataFrame(string r1_file_name, string r2_file_name, int kSize, int chunk_size, int downsampling_ration) {
+    void paired_end_to_kDataFrame(string r1_file_name, string r2_file_name, int kSize, int chunk_size, int downsampling_ratio) {
 
         string PE_1_reads_file = r1_file_name;
         string PE_2_reads_file = r2_file_name;
@@ -26,7 +26,7 @@ namespace kSpider {
         auto* kf = new kDataFrameMQF(KMERS, mumur_hasher, {{"kSize", kSize}});
 
         int Reads_chunks_counter = 0;
-        uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ration;
+        uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ratio;
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
 
@@ -80,7 +80,7 @@ namespace kSpider {
         cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ")" << endl;
     }
 
-    void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ration) {
+    void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ratio) {
 
         string PE_1_reads_file = r1_file_name;
 
@@ -93,7 +93,7 @@ namespace kSpider {
         int Reads_chunks_counter = 0;
 
         uint64_t max_real_hash = READ_1_KMERS->hasher->hash(pow(2, kSize));
-        uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ration;
+        uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ratio;
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
 
@@ -127,7 +127,7 @@ namespace kSpider {
     }
 
 
-    void protein_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, bool is_dayhoff, string output_prefix, int downsampling_ration) {
+    void protein_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, bool is_dayhoff, string output_prefix, int downsampling_ratio) {
 
         string PE_1_reads_file = r1_file_name;
 
@@ -143,7 +143,9 @@ namespace kSpider {
         auto* INT_HASHER = new IntegerHasher(hashing_kmer_kSize);
         uint64_t max_real_hash = INT_HASHER->hash(pow(2, hashing_kmer_kSize));
 
-        uint64_t max_hash = max_real_hash / downsampling_ration;
+        uint64_t max_hash = max_real_hash / downsampling_ratio;
+
+        if(downsampling_ratio == 1) max_hash = UINT64_MAX;
 
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
