@@ -107,8 +107,14 @@ namespace kSpider {
             idx = file_name.rfind('.');
             std::string extension = "";
             if(idx != std::string::npos) extension = file_name.substr(idx+1);
-            int detected_kSize = kDataFrame::load(kf_prefix)->getkSize();
-            if(extension == "mqf") {frame = new kDataFrameMQF(detected_kSize); break;}
+            int detected_kSize;
+            if(extension == "mqf" || extension == "phmap") {
+                detected_kSize = kDataFrame::load(kf_prefix)->getkSize();
+                cout << "Detected kSize: " << detected_kSize << endl;
+            }else{
+                continue;
+            }
+            if(extension == "mqf") {frame = new kDataFrameMQF(detected_kSize, 30, mumur_hasher); break;}
             else if(extension == "phmap") {frame = new kDataFramePHMAP(detected_kSize); break;}
             else {continue;}
         }
@@ -147,6 +153,7 @@ namespace kSpider {
             }
         }
 
+        cout << "namesmap construction done..." << endl;
 
 
         // ----------------------------------------------------------------
