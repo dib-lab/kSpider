@@ -114,7 +114,8 @@ namespace kSpider {
             }else{
                 continue;
             }
-            if(extension == "mqf") {frame = new kDataFrameMQF(detected_kSize, 30, mumur_hasher); break;}
+            // if(extension == "mqf") {frame = new kDataFrameMQF(detected_kSize, 30, mumur_hasher); break;} // temp. switch off
+            if(extension == "extension") {frame = new kDataFramePHMAP(detected_kSize); break;}
             else if(extension == "phmap") {frame = new kDataFramePHMAP(detected_kSize); break;}
             else {continue;}
         }
