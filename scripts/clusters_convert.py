@@ -21,18 +21,18 @@ runID_to_biosample = dict()
 run_ID_combined = dict()
 
 
-# with open(sraRunTable) as RUN_TABLE:
-#     next(RUN_TABLE) # skip header
-#     for line in RUN_TABLE:
-#         line = line.strip()
-#         line = re.split(r',(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)', line)
-#         run_id = line[0]
-#         biosample = line[3]
-#         biome = line[16]
-#         geolocation = line[21]
-#         run_ID_combined[run_id] = f"{biosample}_{biome}_{geolocation}"
-#         runID_to_geolocation[run_id] = geolocation
-#         runID_to_biome[run_id] = biome
+with open(sraRunTable) as RUN_TABLE:
+    next(RUN_TABLE) # skip header
+    for line in RUN_TABLE:
+        line = line.strip()
+        line = re.split(r',(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)', line)
+        run_id = line[0]
+        biosample = line[3]
+        biome = line[16]
+        geolocation = line[21]
+        run_ID_combined[run_id] = f"{biosample}_{biome}_{geolocation}"
+        runID_to_geolocation[run_id] = geolocation
+        runID_to_biome[run_id] = biome
 
 
 # output_biome = os.path.join(os.path.dirname(clusters_file), f"biome_{os.path.basename(clusters_file)}")
