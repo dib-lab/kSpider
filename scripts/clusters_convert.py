@@ -2,8 +2,11 @@ import sys
 import os
 import re
 
-sraRunTable = "SraRunTable.csv"
-clusters_file = "clusters_0.3.tsv"
+if len(sys.argv) < 3:
+    sys.exit("run: python clusters_convert.py <clusters_tsv> <sraTable_csv>")
+
+clusters_file = sys.argv[1]
+sraRunTable = sys.argv[2]
 
 # 0,16
 runID_to_biome = dict()
