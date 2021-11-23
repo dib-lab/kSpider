@@ -41,7 +41,7 @@ run_ID_combined = dict()
 
 output_combined = os.path.join(os.path.dirname(clusters_file), f"insights_{os.path.basename(clusters_file)}")
 with open(clusters_file) as CLUSTERS, open(output_combined, 'w') as COMBINED:
-    header = next(COMBINED)
+    header = next(CLUSTERS)
     COMBINED.write(header)
     for line in CLUSTERS:
         line = line.strip().split('\t')
