@@ -42,3 +42,6 @@ target_include_directories(kSpider INTERFACE ${PHMAP_INCLUDE_DIRS} ${PROJECT_SOU
 
 add_executable(index_kframes apps/index_kframes.cpp)
 target_link_libraries(index_kframes kSpider kProcessor z)
+
+add_executable(normalize apps/normalize_pe.cpp)
+target_link_libraries(normalize kSpider kProcessor z)
