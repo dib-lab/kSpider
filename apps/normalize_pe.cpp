@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
     string PE_2_reads_file = argv[2];
     int chunk_size = 1000;
     int kSize = 25;
-    uint64_t DESIRED_NUM_KMERS = 10; // 0000000; // 10 MILLIONS
+    uint64_t DESIRED_NUM_KMERS = 100000000; // 10 MILLIONS
 
     uint64_t stats_total_kmers = 0;
     uint64_t stats_total_kmers_unique = 0;
@@ -87,7 +87,6 @@ int main(int argc, char** argv) {
         while (_kf_it != kf.end()) {
             kf_final->insert(_kf_it->first, _kf_it->second);
             _kf_it = kf.erase(_kf_it);
-            _kf_it++;
         }
 
         cout << "saving sample (" << base_filename << ")" << endl;
