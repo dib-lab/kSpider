@@ -147,7 +147,7 @@ class BuildPy(build_py):
         super(build_py, self).run()
 
 setup(name='kSpider',
-      version="2.0.2",
+      version="2.1.0",
       description="""A simple yet powerful sequence clustering tool""",
       ext_modules=[kSpider_module],
       py_modules=['kSpider_internal'],
