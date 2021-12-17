@@ -61,8 +61,8 @@ with open(pairwise_file) as CLUSTERS, open(converted_output, 'w') as OUTPUT:
     OUTPUT.write(header)
     for line in CLUSTERS:
         line = line.strip().split('\t')
-        sample1 = run_ID_OUTPUT[namesMap_dict[line[1]]]
-        sample2_id = run_ID_OUTPUT[namesMap_dict[line[2]]]
+        sample1 = namesMap_dict[line[1]] + '_' + run_ID_OUTPUT[namesMap_dict[line[1]]]
+        sample2_id = namesMap_dict[line[2]] + '_' + run_ID_OUTPUT[namesMap_dict[line[2]]]
         shared_no_kmers = line[3]
         OUTPUT.write(f"{line[0]}\t{sample1}\t{sample2_id}\t{shared_no_kmers}\n")
         
