@@ -2,20 +2,21 @@ import os
 import snakemake.io
 import glob
 
-(SAMPLES,READS,) = glob_wildcards("raw/{sample}_{read}.fastq.gz")
-READS=["1","2"]
 
-FASQ_DIR = "/home/mhussien/pag/kSpider_Data/
+FASTQ_DIR="/home/mhussien/pag/kSpider_Data"
+OUTPUT_DIR="/home/mhussien/pag/kframes_scale_1000"
+SAMPLES, = glob_wildcards(FASTQ_DIR + "/{sample}_1.fastq.gz")
+
 
 rule all:
-    input: expand("{FASQ_DIR}/{sample}.{ext}", sample=SAMPLES, ext=['mqf', 'extra'])
+    input: expand(OUTPUT_DIR+"/{sample}.{ext}", sample=SAMPLES, ext=['mqf', 'extra'])
 
 rule peFastQ_to_mqf:
+    output:
+        kf   = OUTPUT_DIR + "/{sample}.mqf",
+        extra  = OUTPUT_DIR +  "/{sample}.extra",
     input:
-        r1="{FASQ_DIR}/{sample}_1.fastq.gz",
-        r2="{FASQ_DIR}/{sample}_2.fastq.gz"
+        r1   = FASTQ_DIR + "/{sample}_1.fastq.gz",
+        r2   = FASTQ_DIR + "/{sample}_2.fastq.gz",
 
-    output: ["{sample}.mqf", "{sample}.extra"]
-
-    # better to pass in the threads than to hardcode them in the shell command
-    shell: "/home/mhussien/miniconda3/envs/pag/bin/kSpider kframes --r1 {input.r1} --r2 {input.r2} -k 25
+    shell: "/home/mhussien/miniconda3/envs/pag/bin/kSpider kframes --r1 {input.r1} --r2 {input.r2} -k 25"
