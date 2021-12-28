@@ -201,12 +201,14 @@ namespace kSpider {
             // Calculating percentile
             auto perc_kf_it = loaded_kf->begin();
             auto* kmerCounts = new(vector<uint64_t>);
+            uint64_t real_no_of_kmers = 0;
             while (perc_kf_it != loaded_kf->end()) {
                 kmerCounts->push_back(perc_kf_it.getCount());
+                real_no_of_kmers++;
                 perc_kf_it++;
             }
             sort(kmerCounts->begin(), kmerCounts->end());
-            uint64_t _idx = (uint64_t)ceil((loaded_kf->size() * LOWEST_PERCENTILE / 100));
+            uint64_t _idx = (uint64_t)ceil((real_no_of_kmers * LOWEST_PERCENTILE / 100));
             uint64_t count_percentile_cutoff = kmerCounts->at(_idx);
             cout << "    calculated percentile cutoff kmercount=" << count_percentile_cutoff << endl;
             delete kmerCounts;
