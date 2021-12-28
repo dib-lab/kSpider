@@ -210,7 +210,7 @@ namespace kSpider {
             sort(kmerCounts->begin(), kmerCounts->end());
             uint64_t _idx = (uint64_t)ceil((real_no_of_kmers * LOWEST_PERCENTILE / 100));
             uint64_t count_percentile_cutoff = kmerCounts->at(_idx);
-            cout << "    calculated percentile cutoff kmercount=" << count_percentile_cutoff << endl;
+            cout << "   calculated percentile cutoff kmercount=" << count_percentile_cutoff << endl;
             delete kmerCounts;
 
             flat_hash_map<uint64_t, uint64_t> convertMap;
@@ -309,7 +309,7 @@ namespace kSpider {
                     }
                     loaded_kf_it++;
                 }
-                cout << "Removed kmers from percentile=(" << removed_kmers_from_percentile <<") out of ("<< real_no_of_kmers <<")" << endl;
+                cout << "   Removed kmers from percentile=(" << removed_kmers_from_percentile <<") out of ("<< real_no_of_kmers <<")" << endl;
                 readID += 1;
                 groupCounter[groupName]--;
                 if (colorsCount[readTag] == 0) {
@@ -319,7 +319,7 @@ namespace kSpider {
                     }
                     
                 }
-                cout << "saved_kmers(~" << frame->size() << ")." << endl;
+                cout << "   saved_kmers(~" << frame->size() << ")." << endl << endl;
                 delete loaded_kf;
         }
 
