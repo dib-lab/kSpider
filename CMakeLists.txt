@@ -46,5 +46,8 @@ target_link_libraries(index_kframes kSpider kProcessor z)
 add_executable(normalize apps/normalize_pe.cpp)
 target_link_libraries(normalize kSpider kProcessor z)
 
-add_executable(kmc_to_kfs apps/kmc_to_kfs.cpp)
-target_link_libraries(kmc_to_kfs kSpider kProcessor z)
+# add_executable(kmc_to_kfs apps/kmc_to_kfs.cpp)
+# target_link_libraries(kmc_to_kfs kSpider kProcessor z)
+
+# add_executable(percentile apps/percentile.cpp)
+# target_link_libraries(percentile kSpider kProcessor z)
