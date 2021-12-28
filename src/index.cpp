@@ -196,7 +196,7 @@ namespace kSpider {
             
             uint64_t removed_kmers_from_percentile = 0;
             auto * loaded_kf = kDataFrame::load(kf_prefix);
-            cout << "Processing " << ++processed_kfs_count << "/" << total_kfs_number << " | " << kf_basename << " k:" << loaded_kf->ksize() << " ... ";
+            cout << "Processing " << ++processed_kfs_count << "/" << total_kfs_number << " | " << kf_basename << " k:" << loaded_kf->ksize() << " ... " << endl;
 
             // Calculating percentile
             auto perc_kf_it = loaded_kf->begin();
@@ -309,7 +309,7 @@ namespace kSpider {
                     }
                     loaded_kf_it++;
                 }
-                cout << "    Removed kmers from percentile=" << removed_kmers_from_percentile << endl;
+                cout << "Removed kmers from percentile=(" << removed_kmers_from_percentile <<") out of ("<< real_no_of_kmers <<")" << endl;
                 readID += 1;
                 groupCounter[groupName]--;
                 if (colorsCount[readTag] == 0) {
