@@ -229,7 +229,7 @@ namespace kSpider {
                while (loaded_kf_it != loaded_kf->end()) {
                     
                     // Don't consider the kmer if it exist in the lower percentile
-                    if(loaded_kf_it.getCount() <= count_percentile_cutoff){
+                    if(loaded_kf_it.getCount() < count_percentile_cutoff){
                         removed_kmers_from_percentile++;
                         loaded_kf_it++;
                         continue; 
