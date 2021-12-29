@@ -229,11 +229,11 @@ namespace kSpider {
                while (loaded_kf_it != loaded_kf->end()) {
                     
                     // Don't consider the kmer if it exist in the lower percentile
-                    if(loaded_kf_it.getCount() < count_percentile_cutoff){
-                        removed_kmers_from_percentile++;
-                        loaded_kf_it++;
-                        continue; 
-                    }
+                    // if(loaded_kf_it.getCount() < count_percentile_cutoff){
+                    //     removed_kmers_from_percentile++;
+                    //     loaded_kf_it++;
+                    //     continue; 
+                    // }
 
                     uint64_t hashed_kmer = loaded_kf_it.getHashedKmer();
                     uint64_t currentTag = frame->getCount(hashed_kmer);
