@@ -4,6 +4,7 @@
 #include <bits/stdc++.h>
 
 #define LOWEST_PERCENTILE 5
+#define DOWNSAMPLING_RATIO 250
 
 int main(int argc, char** argv) {
 
@@ -33,9 +34,7 @@ int main(int argc, char** argv) {
     kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(PE_1_reads_file, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
     kmerDecoder* READ_2_KMERS = kmerDecoder::getInstance(PE_2_reads_file, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
 
-    // auto* kf = new kDataFramePHMAP(KMERS, mumur_hasher, { {"kSize", kSize} });
     flat_hash_map<uint64_t, uint64_t> kf;
-    // kf.reserve(DESIRED_NUM_KMERS);
 
     int Reads_chunks_counter = 0;
     uint64_t total_kmers = 0;
@@ -76,11 +75,11 @@ int main(int argc, char** argv) {
     sort(kmerCounts->begin(), kmerCounts->end());
     uint64_t _idx = (uint64_t)ceil((kf.size() * LOWEST_PERCENTILE / 100));
     uint64_t count_percentile_cutoff = kmerCounts->at(_idx);
-    cout << "calculated percentile cutoff kmercount=" << count_percentile_cutoff << endl;
+    cout << "    calculated percentile cutoff kmercount=" << count_percentile_cutoff << endl;
     delete kmerCounts;
 
 
-    kf_it = kf.begin();
+    flat_hash_map<uint64_t, uint64_t>::iterator kf_it = kf.begin();
     while (kf_it != kf.end()) {
         if (kf_it->second <= count_percentile_cutoff) {
             kf_it = kf.erase(kf_it);
@@ -93,8 +92,13 @@ int main(int argc, char** argv) {
 
     stats_after_percentile_unique = kf.size();
 
+    cout << "Third iteration: downsampling to 1/" << DOWNSAMPLING_RATIO << endl;
+
+    uint64_t max_real_hash = READ_1_KMERS->hasher->hash(pow(2, kSize));
+    uint64_t max_hash = UINT64_MAX / (uint64_t)DOWNSAMPLING_RATIO;
+
     // Check if the sample size is less than the desired num of kmers
-    if (kf.size() < DESIRED_NUM_KMERS) {
+    if (kf.size() == 0) {
 
         // Move into kDataFrame
         auto* kf_final = new kDataFramePHMAP(KMERS, mumur_hasher, { {"kSize", kSize} });

@@ -1,0 +1,9 @@
+__default__:
+    account: ctbrowngrp
+    partition: bml
+    time: 04:00:00
+    nodes: 1
+    ntasks-per-node: 1
+    chdir: /home/mhussien/pag/kframes_scale_1000  # working directory for batch script
+    output: slurm-%j.out
+    error: slurm-%j.err
