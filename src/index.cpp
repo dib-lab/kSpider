@@ -230,10 +230,12 @@ namespace kSpider {
                     
                     // Don't consider the kmer if it exist in the lower percentile
                     // if(loaded_kf_it.getCount() < count_percentile_cutoff){
-                    //     removed_kmers_from_percentile++;
-                    //     loaded_kf_it++;
-                    //     continue; 
-                    // }
+                    // For now, just remove singletones
+                    if(loaded_kf_it.getCount() == 1){
+                        removed_kmers_from_percentile++;
+                        loaded_kf_it++;
+                        continue; 
+                    }
 
                     uint64_t hashed_kmer = loaded_kf_it.getHashedKmer();
                     uint64_t currentTag = frame->getCount(hashed_kmer);
