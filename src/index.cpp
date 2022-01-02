@@ -167,7 +167,6 @@ namespace kSpider {
             inv_groupNameMap[_.second] = _.first;
 
 
-        vector<kDataFrameMQF*> frames;
         int currIndex = 0;
         string kmer;
         uint64_t tagBits = 0;
@@ -194,7 +193,7 @@ namespace kSpider {
             if(idx != std::string::npos) extension = file_name.substr(idx+1);
             if(extension != "mqf" and extension != "phmap") continue;
             
-            uint64_t removed_kmers_from_percentile = 0;
+            // uint64_t removed_kmers_from_percentile = 0;
             auto * loaded_kf = kDataFrame::load(kf_prefix);
             cout << "Processing " << ++processed_kfs_count << "/" << total_kfs_number << " | " << kf_basename << " k:" << loaded_kf->ksize() << " ... " << endl;
 
