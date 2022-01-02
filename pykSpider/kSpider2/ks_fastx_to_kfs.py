@@ -16,10 +16,11 @@ import os
 @click.option('--r1', "r1", type=click.Path(exists=True), help = "paired-end FASTX R1 file", required= False)
 @click.option('--r2', "r2", type=click.Path(exists=True), help = "paired-end FASTX R2 file", required= False)
 @click.option('--protein', "protein", is_flag=True, show_default=True, default=False, help="parsing protein")
+@click.option('--singletones', "singletones", is_flag=True, show_default=True, default=False, help="remove singletones")
 @click.option('--dayhoff', "dayhoff", is_flag=True, show_default=True, default=False, help="parsing protein in dayhoff encoding")
-@click.option('-s', '--scale', "downsampling_ration", required=False, default = 1, help="Downsampling ratio")
+@click.option('-s', '--scale', "downsampling_ratio", required=False, default = 1, help="Downsampling ratio")
 @click.pass_context
-def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_ration):
+def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_ratio, singletones):
     """
     Convert all files in a directory to kDataFrames
     """
@@ -51,13 +52,13 @@ def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_r
         single_end_flag = True
 
     if protein_flag:
-        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, False, os.path.basename(fastx), downsampling_ration)
+        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, False, os.path.basename(fastx), downsampling_ratio)
     elif dayhoff_flag:
-        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, True, os.path.basename(fastx), downsampling_ration)
+        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, True, os.path.basename(fastx), downsampling_ratio)
     elif single_end_flag:
-        kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size, downsampling_ration)
+        kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size, downsampling_ratio)
     else:
         print("Processing paired-end")
-        kSpider_internal.paired_end_to_kDataFrame(r1, r2, kSize, chunk_size, downsampling_ration)
-                    
+        kSpider_internal.paired_end_to_kDataFrame(r1, r2, kSize, chunk_size, downsampling_ratio, singletones)
+
     ctx.obj.SUCCESS("File(s) has been converted.")

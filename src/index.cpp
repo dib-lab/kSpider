@@ -199,19 +199,19 @@ namespace kSpider {
             cout << "Processing " << ++processed_kfs_count << "/" << total_kfs_number << " | " << kf_basename << " k:" << loaded_kf->ksize() << " ... " << endl;
 
             // Calculating percentile
-            auto perc_kf_it = loaded_kf->begin();
-            auto* kmerCounts = new(vector<uint64_t>);
-            uint64_t real_no_of_kmers = 0;
-            while (perc_kf_it != loaded_kf->end()) {
-                kmerCounts->push_back(perc_kf_it.getCount());
-                real_no_of_kmers++;
-                perc_kf_it++;
-            }
-            sort(kmerCounts->begin(), kmerCounts->end());
-            uint64_t _idx = (uint64_t)ceil((real_no_of_kmers * LOWEST_PERCENTILE / 100));
-            uint64_t count_percentile_cutoff = kmerCounts->at(_idx);
-            cout << "   calculated percentile cutoff kmercount=" << count_percentile_cutoff << endl;
-            delete kmerCounts;
+            // auto perc_kf_it = loaded_kf->begin();
+            // auto* kmerCounts = new(vector<uint64_t>);
+            // uint64_t real_no_of_kmers = 0;
+            // while (perc_kf_it != loaded_kf->end()) {
+            //     kmerCounts->push_back(perc_kf_it.getCount());
+            //     real_no_of_kmers++;
+            //     perc_kf_it++;
+            // }
+            // sort(kmerCounts->begin(), kmerCounts->end());
+            // uint64_t _idx = (uint64_t)ceil((real_no_of_kmers * LOWEST_PERCENTILE / 100));
+            // uint64_t count_percentile_cutoff = kmerCounts->at(_idx);
+            // cout << "   calculated percentile cutoff kmercount=" << count_percentile_cutoff << endl;
+            // delete kmerCounts;
 
             flat_hash_map<uint64_t, uint64_t> convertMap;
             string readName = kf_basename;
@@ -230,12 +230,10 @@ namespace kSpider {
                     
                     // Don't consider the kmer if it exist in the lower percentile
                     // if(loaded_kf_it.getCount() < count_percentile_cutoff){
-                    // For now, just remove singletones
-                    if(loaded_kf_it.getCount() == 1){
-                        removed_kmers_from_percentile++;
-                        loaded_kf_it++;
-                        continue; 
-                    }
+                    //     removed_kmers_from_percentile++;
+                    //     loaded_kf_it++;
+                    //     continue; 
+                    // }
 
                     uint64_t hashed_kmer = loaded_kf_it.getHashedKmer();
                     uint64_t currentTag = frame->getCount(hashed_kmer);
@@ -311,7 +309,7 @@ namespace kSpider {
                     }
                     loaded_kf_it++;
                 }
-                cout << "   Removed kmers from percentile=(" << removed_kmers_from_percentile <<") out of ("<< real_no_of_kmers <<")" << endl;
+                // cout << "   Removed kmers from percentile=(" << removed_kmers_from_percentile <<") out of ("<< real_no_of_kmers <<")" << endl;
                 readID += 1;
                 groupCounter[groupName]--;
                 if (colorsCount[readTag] == 0) {

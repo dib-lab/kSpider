@@ -13,7 +13,7 @@
 
 namespace kSpider {
 
-    void paired_end_to_kDataFrame(string r1_file_name, string r2_file_name, int kSize, int chunk_size, int downsampling_ratio) {
+    void paired_end_to_kDataFrame(string r1_file_name, string r2_file_name, int kSize, int chunk_size, int downsampling_ratio, bool remove_singletones) {
 
         string PE_1_reads_file = r1_file_name;
         string PE_2_reads_file = r2_file_name;
@@ -77,8 +77,25 @@ namespace kSpider {
             }
 
         }
-        kf->save(base_filename);
-        cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique("<< kf->size() <<")" << endl;
+        int removed_singletones = 0;
+        if(remove_singletones){
+            auto * new_kf = new kDataFramePHMAP(kSize);
+            auto it = kf->begin();
+            while(it != kf->end()){
+                if(it.getCount() > 1){
+                    new_kf->insert(it.getHashedKmer(), it.getCount());
+                    it++;
+                }
+                removed_singletones++;
+                it++;
+            }
+            cout << "removed " << removed_singletones << " singletones." << endl;
+            new_kf->save(base_filename);
+            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << (inserted_kmers - removed_singletones) << ") << inserted_unique("<< new_kf->size() <<")" << endl;
+        }else{
+            kf->save(base_filename);
+            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique("<< kf->size() <<")" << endl;
+        }
     }
 
     void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ratio) {
