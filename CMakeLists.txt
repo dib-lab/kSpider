@@ -52,6 +52,9 @@ target_link_libraries(dump kSpider kProcessor z)
 add_executable(remove_percentile apps/remove_percentile.cpp)
 target_link_libraries(remove_percentile kSpider kProcessor z)
 
+add_executable(remove_singletones apps/remove_singletones.cpp)
+target_link_libraries(remove_singletones kSpider kProcessor z)
+
 add_executable(dump_count apps/dump_kmer_count.cpp)
 target_link_libraries(dump_count kSpider kProcessor z)
 
