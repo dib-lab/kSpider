@@ -1,5 +1,6 @@
 import os
-import requests, json
+import json
+import urllib.request
 import sys
 
 # Only update this when releasing stable
@@ -16,14 +17,10 @@ def is_github_action():
         return False    
 
 def get_pypa_dev_latest():
-    response = requests.get(f"https://test.pypi.org/pypi/{PYPI_PACKAGE}/json")
-    if response.status_code != 404:
-        data = json.loads(response.text)
+    # Should handle if the package does not exist.
+    with urllib.request.urlopen("https://test.pypi.org/pypi/kSpider/json") as url:
+        data = json.loads(url.read().decode())
         return data["info"]["version"]
-    else:
-        # It does not exist yet on test.pypi
-        return f"{MAJOR}.{MINOR}.{PATCH}"
-
 
 def increment_patch_version(patch_version):
     patch_version = patch_version.split('.')
