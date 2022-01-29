@@ -7,10 +7,10 @@ on:
       - prepare
 
 jobs:
-  build_wheels:
+  build_wheels:    
     if: |
-      ${{ contains(github.event.head_commit.message, 'wheels') }} ||
-      ${{ contains(github.event.head_commit.message, 'pypi) }}
+      ${{ contains(github.event.head_commit.message, 'wheels') }} &&
+      ${{ contains(github.event.head_commit.message, 'pypi') }}
 
     strategy:
       matrix:
@@ -70,7 +70,7 @@ jobs:
       - uses: actions/download-artifact@v2
         id: fetch_artifacts
         with:
-          path: 'wheels/'
+          path: "wheels/"
 
       - name: Publish package to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
