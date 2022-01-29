@@ -185,10 +185,11 @@ class BuildPy(build_py):
 
 
 def version():
-    import site
-    site.addsitedir('pykSpider/kSpider2/')
-    from kSpider_version import get_version
-    return get_version()
+    import importlib.util
+    v = importlib.util.spec_from_file_location("kSpider_version","pykSpider/kSpider2/kSpider_version.py")
+    version = importlib.util.module_from_spec(v)
+    v.loader.exec_module(version)
+    return version.get_version()
 
 setup(name='kSpider',
       version=version(),
