@@ -12,7 +12,7 @@ jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    if: "contains(github.event.head_commit.message, 'wheels')"
+    if: contains(github.event.head_commit.message, 'wheels')
     strategy:
       matrix:
         os: ["ubuntu-latest"]
@@ -58,7 +58,7 @@ jobs:
     needs: build_wheels
     if: |
       ${{ github.ref != 'refs/heads/master' }} &&
-      "contains(github.event.head_commit.message, 'pypi')"
+      contains(github.event.head_commit.message, 'pypi')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       ${{ github.ref == 'refs/heads/master' }} &&
-      "contains(github.event.head_commit.message, 'pypi')"
+      contains(github.event.head_commit.message, 'pypi')
     steps:
       - uses: actions/checkout@v2
 
