@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - pag
   pull_request:
     branches:
       - master
@@ -16,7 +15,7 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'ci_skip')"
     strategy:
       matrix:
-        os: [ ubuntu-18.04 ]
+        os: [ "ubuntu-latest" ]
         py_version: [3.6, 3.7, 3.8, 3.9, 3.10]
 
     steps:
@@ -26,7 +25,7 @@ jobs:
 
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.10.0
+        uses: pypa/cibuildwheel@v2.3.1
 
         env:
           CIBW_BUILD_VERBOSITY: 3
