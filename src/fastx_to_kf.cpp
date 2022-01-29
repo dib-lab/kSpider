@@ -24,7 +24,7 @@ namespace kSpider {
         kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
         kmerDecoder* READ_2_KMERS = kmerDecoder::getInstance(r2_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
 
-        auto* kf = new kDataFramePHMAP(KMERS, mumur_hasher, {{"kSize", kSize}});
+        auto* kf = new kDataFramePHMAP(KMERS, mumur_hasher, { {"kSize", kSize} });
 
         int Reads_chunks_counter = 0;
         uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ratio;
@@ -78,11 +78,11 @@ namespace kSpider {
 
         }
         int removed_singletones = 0;
-        if(remove_singletones){
-            auto * new_kf = new kDataFramePHMAP(kSize);
+        if (remove_singletones) {
+            auto* new_kf = new kDataFramePHMAP(kSize);
             auto it = kf->begin();
-            while(it != kf->end()){
-                if(it.getCount() > 1){
+            while (it != kf->end()) {
+                if (it.getCount() > 1) {
                     new_kf->insert(it.getHashedKmer(), it.getCount());
                     it++;
                 }
@@ -91,14 +91,15 @@ namespace kSpider {
             }
             cout << "removed " << removed_singletones << " singletones." << endl;
             new_kf->save(base_filename);
-            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << (inserted_kmers - removed_singletones) << ") << inserted_unique("<< new_kf->size() <<")" << endl;
-        }else{
+            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << (inserted_kmers - removed_singletones) << ") << inserted_unique(" << new_kf->size() << ")" << endl;
+        }
+        else {
             kf->save(base_filename);
-            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique("<< kf->size() <<")" << endl;
+            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique(" << kf->size() << ")" << endl;
         }
     }
 
-    void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ratio) {
+    void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ratio, bool remove_singletones) {
 
         string PE_1_reads_file = r1_file_name;
 
@@ -106,24 +107,26 @@ namespace kSpider {
         base_filename = base_filename.substr(0, base_filename.find('_'));
 
         kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
-        auto* kf = new kDataFrameMQF(KMERS, mumur_hasher, { {"kSize", kSize} });
+
+        auto* kf = new kDataFramePHMAP(KMERS, mumur_hasher, { {"kSize", kSize} });
 
         int Reads_chunks_counter = 0;
-
-        uint64_t max_real_hash = READ_1_KMERS->hasher->hash(pow(2, kSize));
         uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ratio;
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
 
+
         while (!READ_1_KMERS->end()) {
+
+
             READ_1_KMERS->next_chunk();
 
             flat_hash_map<std::string, std::vector<kmer_row>>::iterator seq1 = READ_1_KMERS->getKmers()->begin();
             flat_hash_map<std::string, std::vector<kmer_row>>::iterator seq1_end = READ_1_KMERS->getKmers()->end();
 
             while (seq1 != seq1_end) {
+
                 for (auto const kRow : seq1->second) {
-                    // downsampling
                     if (kRow.hash < max_hash) {
                         kf->insert(kRow.hash);
                         total_kmers++;
@@ -134,14 +137,31 @@ namespace kSpider {
                         continue;
                     }
                 }
+
                 seq1++;
             }
 
         }
-
-        kf->save(base_filename);
-        cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ")" << endl;
-
+        int removed_singletones = 0;
+        if (remove_singletones) {
+            auto* new_kf = new kDataFramePHMAP(kSize);
+            auto it = kf->begin();
+            while (it != kf->end()) {
+                if (it.getCount() > 1) {
+                    new_kf->insert(it.getHashedKmer(), it.getCount());
+                    it++;
+                }
+                removed_singletones++;
+                it++;
+            }
+            cout << "removed " << removed_singletones << " singletones." << endl;
+            new_kf->save(base_filename);
+            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << (inserted_kmers - removed_singletones) << ") << inserted_unique(" << new_kf->size() << ")" << endl;
+        }
+        else {
+            kf->save(base_filename);
+            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique(" << kf->size() << ")" << endl;
+        }
     }
 
 
@@ -163,7 +183,7 @@ namespace kSpider {
 
         uint64_t max_hash = max_real_hash / downsampling_ratio;
 
-        if(downsampling_ratio == 1) max_hash = UINT64_MAX;
+        if (downsampling_ratio == 1) max_hash = UINT64_MAX;
 
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;

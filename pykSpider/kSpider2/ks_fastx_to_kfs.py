@@ -59,7 +59,7 @@ def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_r
         kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, True, os.path.basename(fastx), downsampling_ratio)
     elif single_end_flag:
         ctx.obj.INFO("Processing single-end reads.")
-        kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size, downsampling_ratio)
+        kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size, downsampling_ratio, singletones)
     elif paired_end_flag:
         ctx.obj.INFO("Processing paired-end reads.")
         kSpider_internal.paired_end_to_kDataFrame(r1, r2, kSize, chunk_size, downsampling_ratio, singletones)
