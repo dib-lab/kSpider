@@ -7,6 +7,11 @@ import os
 import subprocess
 import errno
 
+import site
+site.addsitedir('pykSpider/kSpider2/')
+from kSpider_version import get_version
+
+
 if sys.version_info[:2] < (3, 6):
     raise RuntimeError("Python version >=3.6")
 
@@ -147,7 +152,7 @@ class BuildPy(build_py):
         super(build_py, self).run()
 
 setup(name='kSpider',
-      version="2.1.0",
+      version=get_version(),
       description="""A simple yet powerful sequence clustering tool""",
       ext_modules=[kSpider_module],
       py_modules=['kSpider_internal'],

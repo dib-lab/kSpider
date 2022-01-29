@@ -12,7 +12,7 @@ jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    if: "!contains(github.event.head_commit.message, 'ci_skip')"
+    if: "contains(github.event.head_commit.message, 'wheels')"
     strategy:
       matrix:
         os: ["ubuntu-latest"]
@@ -21,11 +21,16 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+      
+      # Sure there's a better way to do this, but I doncare.
+      - name: write_branchName_to_file
+        run: echo ${GITHUB_REF##*/} > branch_name.tmp
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
 
         env:
+          CIBW_ENVIRONMENT: "BRANCH_NAME=$(cat branch_name.tmp)"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_BUILD: cp36-manylinux_x86_64 cp37-manylinux_x86_64 cp38-manylinux_x86_64 cp39-manylinux_x86_64 cp310-manylinux_x86_64
           CIBW_SKIP: pp* *-manylinux_{aarch64,ppc64le,s390x}
@@ -49,10 +54,36 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
 
+  upload_pypi_test:
+    needs: build_wheels
+    if: |
+      ${{ github.ref != 'refs/heads/master' }} &&
+      "contains(github.event.head_commit.message, 'pypi')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v2
+        id: fetch_artifacts
+        with:
+          path: 'wheels/'
+
+      - name: Publish package to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_KEY }}
+          repository_url: https://test.pypi.org/legacy/
+          packages_dir: ${{steps.fetch_artifacts.outputs.download-path}}/artifact/
+          skip_existing: true
+          verbose: true
+
   upload_pypi_release:
     needs: build_wheels
-    runs-on: ubuntu-18.04
-    if: "contains(github.event.head_commit.message, 'publish_pypi')"
+    runs-on: ubuntu-latest
+    if: |
+      ${{ github.ref == 'refs/heads/master' }} &&
+      "contains(github.event.head_commit.message, 'pypi')"
     steps:
       - uses: actions/checkout@v2
 
@@ -61,7 +92,7 @@ jobs:
         with:
           path: "wheels/"
 
-      - name: Publish package to TestPyPI
+      - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__

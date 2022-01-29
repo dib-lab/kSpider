@@ -1,5 +1,7 @@
 import click
 from kSpider2.customLogger import Logger
+from kSpider2.kSpider_version import get_version
+
 
 class SpecialHelpOrder(click.Group):
 
@@ -34,7 +36,7 @@ class SpecialHelpOrder(click.Group):
 
 
 @click.group(cls=SpecialHelpOrder)
-@click.version_option(version="2.0.0", prog_name="kSpider")
+@click.version_option(version=get_version(), prog_name="kSpider")
 @click.option('-q', '--quiet', default=False, is_flag=True)
 @click.pass_context
 def cli(ctx, quiet):
