@@ -55,5 +55,5 @@ def get_version():
     else:
         version_tag = dev_version
 
-    print(f"[DEBUG VERSION] = {version_tag}")
+    # print(f"[DEBUG VERSION] = {version_tag}")
     return version_tag
