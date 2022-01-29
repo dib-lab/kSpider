@@ -183,12 +183,15 @@ class BuildPy(build_py):
         self.run_command('build_ext')
         super(build_py, self).run()
 
-# import site
-# site.addsitedir('pykSpider/kSpider2/')
-# from kSpider_version import get_version
+
+def version():
+    import site
+    site.addsitedir('pykSpider/kSpider2/')
+    from kSpider_version import get_version
+    return get_version()
 
 setup(name='kSpider',
-      version="2.0.2",
+      version=version(),
       description="""A simple yet powerful sequence clustering tool""",
       ext_modules=[kSpider_module],
       py_modules=['kSpider_internal'],
