@@ -8,7 +8,9 @@ on:
 
 jobs:
   build_wheels:
-    if: ${{ contains(github.event.head_commit.message, 'wheels') }}
+    if: |
+      ${{ contains(github.event.head_commit.message, 'wheels') }} ||
+      ${{ contains(github.event.head_commit.message, 'pypi) }}
     strategy:
       matrix:
         os: ["ubuntu-latest"]
@@ -37,9 +39,9 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
           CIBW_BEFORE_ALL: |
             yum install bzip2 -y
-            pip install --upgrade pip
-            pip install cmake
-            pip install requests
+            python -m pip install --upgrade pip
+            python -m pip install cmake
+            python -m pip install requests
             yum install python-requests -y
             yum install zlib-devel -y
             yum install centos-release-scl-rh -y
