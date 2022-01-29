@@ -6,6 +6,7 @@ import sys
 import os
 import subprocess
 import errno
+from kSpider_version import get_version
 
 """
 
@@ -184,15 +185,9 @@ class BuildPy(build_py):
         super(build_py, self).run()
 
 
-def version():
-    import importlib.util
-    v = importlib.util.spec_from_file_location("kSpider_version","pykSpider/kSpider2/kSpider_version.py")
-    version = importlib.util.module_from_spec(v)
-    v.loader.exec_module(version)
-    return version.get_version()
 
 setup(name='kSpider',
-      version=version(),
+      version=get_version(),
       description="""A simple yet powerful sequence clustering tool""",
       ext_modules=[kSpider_module],
       py_modules=['kSpider_internal'],
