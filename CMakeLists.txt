@@ -40,23 +40,23 @@ set_target_properties(kSpider PROPERTIES POSITION_INDEPENDENT_CODE 1 CXX_STANDAR
 target_link_libraries (kSpider kProcessor z)
 target_include_directories(kSpider INTERFACE ${PHMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor)
 
-add_executable(index_kframes apps/index_kframes.cpp)
-target_link_libraries(index_kframes kSpider kProcessor z)
+# add_executable(index_kframes apps/index_kframes.cpp)
+# target_link_libraries(index_kframes kSpider kProcessor z)
 
-add_executable(normalize apps/normalize_pe.cpp)
-target_link_libraries(normalize kSpider kProcessor z)
+# add_executable(normalize apps/normalize_pe.cpp)
+# target_link_libraries(normalize kSpider kProcessor z)
 
-add_executable(dump apps/dump_kframe.cpp)
-target_link_libraries(dump kSpider kProcessor z)
+# add_executable(dump apps/dump_kframe.cpp)
+# target_link_libraries(dump kSpider kProcessor z)
 
-add_executable(remove_percentile apps/remove_percentile.cpp)
-target_link_libraries(remove_percentile kSpider kProcessor z)
+# add_executable(remove_percentile apps/remove_percentile.cpp)
+# target_link_libraries(remove_percentile kSpider kProcessor z)
 
-add_executable(remove_singletones apps/remove_singletones.cpp)
-target_link_libraries(remove_singletones kSpider kProcessor z)
+# add_executable(remove_singletones apps/remove_singletones.cpp)
+# target_link_libraries(remove_singletones kSpider kProcessor z)
 
-add_executable(dump_count apps/dump_kmer_count.cpp)
-target_link_libraries(dump_count kSpider kProcessor z)
+# add_executable(dump_count apps/dump_kmer_count.cpp)
+# target_link_libraries(dump_count kSpider kProcessor z)
 
 # add_executable(kmc_to_kfs apps/kmc_to_kfs.cpp)
 # target_link_libraries(kmc_to_kfs kSpider kProcessor z)

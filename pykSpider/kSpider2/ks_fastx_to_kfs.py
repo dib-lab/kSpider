@@ -9,7 +9,7 @@ from kSpider2.click_context import cli
 import os
 
 
-@cli.command(name="kframes", help_priority=6)
+@cli.command(name="sketch", help_priority=6)
 @click.option('-c', '--chunk-size', "chunk_size", required=False, type=click.INT, default=3000, help="chunk size")
 @click.option('-k', '--kmer-size', "kSize", required=True, type=click.IntRange(7, 31, clamp=False), help="kmer size")
 @click.option('--fastx', "fastx", type=click.Path(exists=True), help = "FASTX file path, works with interleaved paired-end and protein", required= False)
@@ -22,7 +22,7 @@ import os
 @click.pass_context
 def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_ratio, singletones):
     """
-    Convert all files in a directory to kDataFrames
+    Sketch sequence files.
     """
     
     if protein and (r1 or r2):
@@ -47,18 +47,23 @@ def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_r
     elif fastx and protein:
         protein_flag = True
     elif fastx and dayhoff:
-        protein_flag = True
+        dayhoff_flag = True
     elif fastx and not protein and not dayhoff:
         single_end_flag = True
 
     if protein_flag:
+        ctx.obj.INFO("Processing protein in default mode.")
         kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, False, os.path.basename(fastx), downsampling_ratio)
     elif dayhoff_flag:
+        ctx.obj.INFO("Processing protein in dayhoff mode.")
         kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, True, os.path.basename(fastx), downsampling_ratio)
     elif single_end_flag:
+        ctx.obj.INFO("Processing single-end reads.")
         kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size, downsampling_ratio)
-    else:
-        print("Processing paired-end")
+    elif paired_end_flag:
+        ctx.obj.INFO("Processing paired-end reads.")
         kSpider_internal.paired_end_to_kDataFrame(r1, r2, kSize, chunk_size, downsampling_ratio, singletones)
+    else:
+        ctx.obj.ERROR("Something went wrong!")
 
-    ctx.obj.SUCCESS("File(s) has been converted.")
+    ctx.obj.SUCCESS("File(s) has been sketched.")
