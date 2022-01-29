@@ -201,7 +201,6 @@ setup(name='kSpider',
       classifiers=classifiers,
       install_requires=[
           'Click',
-          'requests',
       ],
       include_package_data=True,
       entry_points='''
