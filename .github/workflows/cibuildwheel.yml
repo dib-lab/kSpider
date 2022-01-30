@@ -1,42 +1,45 @@
 name: cibuildwheel
 
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+on: [push, pull_request]
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    if: "!contains(github.event.head_commit.message, 'ci_skip')"
+  build_wheels:    
+    if: |
+      ${{ contains(github.event.head_commit.message, 'wheels') }} &&
+      ${{ contains(github.event.head_commit.message, 'pypi') }}
+
     strategy:
       matrix:
-        os: [ ubuntu-18.04 ]
-        py_version: [3.6, 3.7, 3.8, 3.9]
+        os: ["ubuntu-latest"]
+
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-
+      
+      # Sure there's a better way to do this, but I doncare.
+      - name: write_branchName_to_file
+        run: echo ${GITHUB_REF##*/} > branch_name.tmp
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@v1.10.0
+        uses: pypa/cibuildwheel@v2.3.1
 
         env:
+          CIBW_ENVIRONMENT: "BRANCH_NAME=$(cat branch_name.tmp)"
           CIBW_BUILD_VERBOSITY: 3
-          CIBW_PROJECT_REQUIRES_PYTHON: "~=${{ matrix.py_version }}"
-          CIBW_SKIP: pp* cp27-manylinux* *-manylinux_{aarch64,ppc64le,s390x}
+          CIBW_BUILD: cp36-manylinux_x86_64 cp37-manylinux_x86_64 cp38-manylinux_x86_64 cp39-manylinux_x86_64 cp310-manylinux_x86_64
+          CIBW_SKIP: pp* *-manylinux_{aarch64,ppc64le,s390x}
           CIBW_ARCHS_LINUX: x86_64
           CIBW_MANYLINUX_X86_64_IMAGE: quay.io/pypa/manylinux2014_x86_64:latest
-          CIBW_BEFORE_BUILD: |
+          CIBW_BEFORE_ALL: |
             yum install bzip2 -y
-            pip install --upgrade pip
-            pip install cmake
+            python -m pip install --upgrade pip
+            python -m pip install cmake
+            python -m pip install requests
+            yum install python-requests -y
             yum install zlib-devel -y
             yum install centos-release-scl-rh -y
             yum install doxygen -y
@@ -47,25 +50,45 @@ jobs:
             cmake -BkSpider_BUILD_DIR
             cmake --build kSpider_BUILD_DIR -j4
 
-
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
 
-
-  upload_pypi_release:
+  upload_pypi_test:
     needs: build_wheels
-    runs-on: ubuntu-18.04
-    if: "contains(github.event.head_commit.message, 'publish_pypi')"
+    if: github.ref != 'refs/heads/master' && contains(github.event.head_commit.message, 'pypi')
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
       - uses: actions/download-artifact@v2
         id: fetch_artifacts
         with:
-          path: 'wheels/'
+          path: "wheels/"
 
       - name: Publish package to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_KEY }}
+          repository_url: https://test.pypi.org/legacy/
+          packages_dir: ${{steps.fetch_artifacts.outputs.download-path}}/artifact/
+          skip_existing: true
+          verbose: true
+
+  upload_pypi_release:
+    needs: build_wheels
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, 'pypi')
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v2
+        id: fetch_artifacts
+        with:
+          path: "wheels/"
+
+      - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__

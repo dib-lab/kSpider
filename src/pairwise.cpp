@@ -79,6 +79,9 @@ void pairwise(string index_prefix) {
         it++;
     }
 
+    // Free some memory
+    delete kf;
+
     flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
     for (const auto &record : color_to_ids) {
         uint32_t colorCount = colorsCount[record.first];

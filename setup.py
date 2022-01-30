@@ -6,6 +6,44 @@ import sys
 import os
 import subprocess
 import errno
+from kSpider_version import get_version
+
+"""
+
+           ;               ,           
+         ,;                 '.         
+        ;:                   :;        
+       ::                     ::       
+       ::                     ::       
+       ':                     :        
+        :.                    :        
+     ;' ::                   ::  '     
+    .'  ';                   ;'  '.    
+   ::    :;                 ;:    ::   
+   ;      :;.             ,;:     ::   
+   :;      :;:           ,;"      ::   
+   ::.      ':;  ..,.;  ;:'     ,.;:   
+    "'"...   '::,::::: ;:   .;.;""'    
+        '""'....;:::::;,;.;'""         
+    .:::.....'"':::::::'",...;::::;.   
+   ;:' '""'"";.,;:::::;.'""""""  ':;   
+  ::'         ;::;:::;::..         :;  
+ ::         ,;:::::::::::;:..       :: 
+ ;'     ,;;:;::::::::::::::;";..    ':.
+::     ;:"  ::::::"'"'::::::  ":     ::
+ :.    ::   ::::::;  :::::::   :     ; 
+  ;    ::   :::::::  :::::::   :    ;  
+   '   ::   ::::::....:::::'  ,:   '   
+    '  ::    :::::::::::::"   ::       
+       ::     ':::::::::"'    ::       
+       ':       """""""'      ::       
+        ::                   ;:        
+        ':;                 ;:"        
+          ';              ,;'          
+            "'           '"            
+              '
+
+"""
 
 if sys.version_info[:2] < (3, 6):
     raise RuntimeError("Python version >=3.6")
@@ -146,8 +184,10 @@ class BuildPy(build_py):
         self.run_command('build_ext')
         super(build_py, self).run()
 
+
+
 setup(name='kSpider',
-      version="2.0.2",
+      version=get_version(),
       description="""A simple yet powerful sequence clustering tool""",
       ext_modules=[kSpider_module],
       py_modules=['kSpider_internal'],
@@ -160,7 +200,10 @@ setup(name='kSpider',
       long_description=readme,
       classifiers=classifiers,
       install_requires=[
-          'Click',
+          'Click', 
+          'pandas', 
+          'scipy',
+          'numpy',
       ],
       include_package_data=True,
       entry_points='''
