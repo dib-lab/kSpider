@@ -110,15 +110,18 @@ namespace kSpider {
             std::string extension = "";
             if(idx != std::string::npos) extension = file_name.substr(idx+1);
             int detected_kSize;
+            hashingModes _hm;
             if(extension == "mqf" || extension == "phmap") {
-                detected_kSize = kDataFrame::load(kf_prefix)->getkSize();
+                auto * _kf = kDataFrame::load(kf_prefix);
+                _hm = _kf->getkmerDecoder()->hash_mode;
+                detected_kSize = _kf->getkSize();
                 cout << "Detected kSize: " << detected_kSize << endl;
             }else{
                 continue;
             }
             // if(extension == "mqf") {frame = new kDataFrameMQF(detected_kSize, 30, mumur_hasher); break;} // temp. switch off
-            if(extension == "mqf") {frame = new kDataFramePHMAP(detected_kSize); break;}
-            else if(extension == "phmap") {frame = new kDataFramePHMAP(detected_kSize); break;}
+            if(extension == "mqf") {frame = new kDataFramePHMAP(detected_kSize, _hm); break;}
+            else if(extension == "phmap") {frame = new kDataFramePHMAP(detected_kSize, _hm); break;}
             else {continue;}
         }
 
