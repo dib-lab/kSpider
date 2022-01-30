@@ -5,8 +5,8 @@ import sys
 
 # Only update this when releasing stable
 MAJOR = 2
-MINOR = 0
-PATCH = 3
+MINOR = 1
+PATCH = 0
 
 PYPI_PACKAGE = "kSpider"
 
