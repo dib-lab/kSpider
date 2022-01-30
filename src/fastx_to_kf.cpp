@@ -104,7 +104,6 @@ namespace kSpider {
         string PE_1_reads_file = r1_file_name;
 
         std::string base_filename = PE_1_reads_file.substr(PE_1_reads_file.find_last_of("/\\") + 1);
-        base_filename = base_filename.substr(0, base_filename.find('_'));
 
         kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
 
