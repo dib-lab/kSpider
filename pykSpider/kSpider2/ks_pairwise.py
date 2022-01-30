@@ -10,7 +10,7 @@ import click
 from kSpider2.click_context import cli
 
 
-@cli.command(name="pairwise", help_priority=4)
+@cli.command(name="pairwise", help_priority=6)
 @click.option('-i', '--index-prefix', required=True, type=click.STRING, help="Index file prefix")
 @click.pass_context
 def main(ctx, index_prefix):

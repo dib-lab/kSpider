@@ -1,39 +1,30 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import division
+
 import _kSpider_internal as kSpider_internal
 import click
 from kSpider2.click_context import cli
 import os
+from glob import glob
 
 
-@cli.command(name="index_datasets", help_priority=7)
-@click.option('-c', '--chunk-size', "chunk_size", required=False, type=click.INT, default=3000, help="chunk size")
-@click.option('-k', '--kmer-size', "kSize", required=True, type=click.IntRange(7, 31, clamp=False), help="kmer size")
-@click.option('-l', '--fastx-list', "fastx_list", type=click.Path(exists=True))
-@click.option('--paired-end', "paired_end", is_flag=True, show_default=True, default=False, help="paired-end reads mode")
-@click.option('--protein', "protein", is_flag=True, show_default=True, default=False, help="parsing protein")
-@click.option('--dayhoff', "dayhoff", is_flag=True, show_default=True, default=False, help="parsing protein in dayhoff encoding")
+@cli.command(name="index_datasets", help_priority=5)
+@click.option('-dir', "sketches_dir", required = True, help="Sketches directory (must contain only the sketches)")
 @click.pass_context
-def main(ctx, fastx_list, paired_end, chunk_size, kSize, protein, dayhoff):
+def main(ctx, sketches_dir):
     """
-    Index all files in a directory
+    Index all sketches in a directory.
     """
+    if not os.path.exists(sketches_dir):
+        ctx.obj.ERROR(f"{sketches_dir} does not exist!")
     
-    if protein and paired_end:
-        ctx.obj.ERROR("Protein can't be paired-end.")
-
-    if not paired_end:
-        with open(fastx_list) as fastx:
-            for line in fastx:
-                file_path = line.strip()
-                if not os.path.exists(file_path):
-                    ctx.obj.ERROR(f"{file_path} file does not exist")
-                
-                ctx.obj.INFO(f"Processing {file_path}")
-                if dayhoff:
-                    kSpider_internal.protein_to_kDataFrame(file_path, kSize, chunk_size, True, os.path.basename(file_path))
-                elif protein:
-                    kSpider_internal.protein_to_kDataFrame(file_path, kSize, chunk_size, False, os.path.basename(file_path))
-                else:
-                    kSpider_internal.single_end_to_kDataFrame(file_path, kSize, chunk_size)
+    all_extra = list(glob(f"{sketches_dir}/*extra"))
+    all_sketches_phmap = glob(f"{sketches_dir}/*phmap")    
+    all_sketches_mqf = glob(f"{sketches_dir}/*mqf")    
+    
+    if len(all_extra) != (len(all_sketches_phmap) + len(all_sketches_mqf)):
+        ctx.obj.ERROR(f"Inconsistent sketches files.")
+    
+    ctx.obj.INFO(f"Indexing sketches in {sketches_dir}.")
+    kSpider_internal.index_datasets(sketches_dir)

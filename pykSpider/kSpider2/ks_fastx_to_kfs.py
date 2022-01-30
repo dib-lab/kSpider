@@ -9,7 +9,7 @@ from kSpider2.click_context import cli
 import os
 
 
-@cli.command(name="sketch", help_priority=6)
+@cli.command(name="sketch", help_priority=4)
 @click.option('-c', '--chunk-size', "chunk_size", required=False, type=click.INT, default=3000, help="chunk size")
 @click.option('-k', '--kmer-size', "kSize", required=True, type=click.IntRange(7, 31, clamp=False), help="kmer size")
 @click.option('--fastx', "fastx", type=click.Path(exists=True), help = "FASTX file path, works with interleaved paired-end and protein", required= False)
