@@ -200,7 +200,9 @@ setup(name='kSpider',
       long_description=readme,
       classifiers=classifiers,
       install_requires=[
-          'Click',
+          'Click', 
+          'pandas', 
+          'scipy',
       ],
       include_package_data=True,
       entry_points='''
