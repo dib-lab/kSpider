@@ -10,7 +10,7 @@ from glob import glob
 
 
 @cli.command(name="index_datasets", help_priority=5)
-@click.option('-dir', "sketches_dir", required = True, help="Sketches directory (must contain only the sketches)")
+@click.option('--dir', "sketches_dir", required = True, help="Sketches directory (must contain only the sketches)")
 @click.pass_context
 def main(ctx, sketches_dir):
     """
