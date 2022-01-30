@@ -7,11 +7,12 @@ import _kSpider_internal as kSpider_internal
 import click
 import pandas as pd
 from kSpider2.click_context import cli
-from scipy.cluster.hierarchy import linkage, to_tree
+from scipy.cluster.hierarchy import linkage, to_tree, ClusterWarning
+from warnings import simplefilter
+simplefilter("ignore", ClusterWarning)
+
 
 # Thanks to https://stackoverflow.com/a/31878514/3371177
-
-
 def get_newick(node, parent_dist, leaf_names, newick='') -> str:
     """
     Convert sciply.cluster.hierarchy.to_tree()-output to Newick format.
@@ -100,7 +101,8 @@ def main(ctx, index_prefix, containment, newick, distance_matrix):
             shared_kmers = int(line[2])
             grp1 = namesMap_dict[origin_grp1]
             grp2 = namesMap_dict[origin_grp2]
-            min_seq = float(min(seq_to_kmers[origin_grp1], seq_to_kmers[origin_grp2]))
+            min_seq = float(
+                min(seq_to_kmers[origin_grp1], seq_to_kmers[origin_grp2]))
             max_containment = (shared_kmers / min_seq)
             value = shared_kmers
             if containment:
@@ -124,7 +126,7 @@ def main(ctx, index_prefix, containment, newick, distance_matrix):
         if newick:
             if not distance_matrix:
                 df.to_csv(distmatrix_out, sep='\t')
-            loaded_df = pd.read_csv(distmatrix_out, sep = '\t')
+            loaded_df = pd.read_csv(distmatrix_out, sep='\t')
             os.remove(distmatrix_out)
             ctx.obj.INFO(f"Writing newick to {newick_out}.")
             names = list(loaded_df.columns[1:])

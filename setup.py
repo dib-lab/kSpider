@@ -203,6 +203,7 @@ setup(name='kSpider',
           'Click', 
           'pandas', 
           'scipy',
+          'numpy',
       ],
       include_package_data=True,
       entry_points='''
