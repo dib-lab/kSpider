@@ -2,9 +2,11 @@
 #include <cstdint>
 #include "argh.h"
 #include <chrono>
-#include "colored_kDataFrame.hpp"
 #include "parallel_hashmap/phmap.h"
 #include <queue>
+#include <string>
+
+using namespace std;
 
 namespace kSpider {
 
@@ -19,4 +21,4 @@ namespace kSpider {
     void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ration, bool remove_singletones);
     void protein_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, bool is_dayhoff, string output_prefix, int downsampling_ration = 1);
 
-};
+}

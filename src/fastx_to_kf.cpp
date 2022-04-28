@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include <kDataFrame.hpp>
+#include "kDataFrameSTL.hpp"
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -25,6 +25,8 @@ namespace kSpider {
         kmerDecoder* READ_2_KMERS = kmerDecoder::getInstance(r2_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
 
         auto* kf = new kDataFramePHMAP(KMERS, mumur_hasher, { {"kSize", kSize} });
+        kf->addCountColumn();
+        kf->reserve(10000);
 
         int Reads_chunks_counter = 0;
         uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ratio;
@@ -48,7 +50,7 @@ namespace kSpider {
 
                 for (auto const kRow : seq1->second) {
                     if (kRow.hash < max_hash) {
-                        kf->insert(kRow.hash);
+                        kf->incrementCount(kRow.hash);
                         total_kmers++;
                         inserted_kmers++;
                     }
@@ -61,7 +63,7 @@ namespace kSpider {
 
                 for (auto const kRow : seq2->second) {
                     if (kRow.hash < max_hash) {
-                        kf->insert(kRow.hash);
+                        kf->incrementCount(kRow.hash);
                         total_kmers++;
                         inserted_kmers++;
                     }
@@ -80,10 +82,11 @@ namespace kSpider {
         int removed_singletones = 0;
         if (remove_singletones) {
             auto* new_kf = new kDataFramePHMAP(kSize);
+            new_kf->addCountColumn();
             auto it = kf->begin();
             while (it != kf->end()) {
                 if (it.getCount() > 1) {
-                    new_kf->insert(it.getHashedKmer(), it.getCount());
+                    new_kf->setCount(it.getHashedKmer(), it.getCount());
                     it++;
                 }
                 removed_singletones++;
@@ -101,67 +104,70 @@ namespace kSpider {
 
     void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ratio, bool remove_singletones) {
 
-        string PE_1_reads_file = r1_file_name;
+    string PE_1_reads_file = r1_file_name;
 
-        std::string base_filename = PE_1_reads_file.substr(PE_1_reads_file.find_last_of("/\\") + 1);
+    std::string base_filename = PE_1_reads_file.substr(PE_1_reads_file.find_last_of("/\\") + 1);
 
-        kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
+    kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
 
-        auto* kf = new kDataFramePHMAP(KMERS, mumur_hasher, { {"kSize", kSize} });
-
-        int Reads_chunks_counter = 0;
-        uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ratio;
-        uint64_t total_kmers = 0;
-        uint64_t inserted_kmers = 0;
-
-
-        while (!READ_1_KMERS->end()) {
+    auto* kf = new kDataFramePHMAP(KMERS, mumur_hasher, { {"kSize", kSize} });
+    kf->addCountColumn();
+    kf->reserve(10000);
+    int Reads_chunks_counter = 0;
+    uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ratio;
+    uint64_t total_kmers = 0;
+    uint64_t inserted_kmers = 0;
 
 
-            READ_1_KMERS->next_chunk();
+    while (!READ_1_KMERS->end()) {
 
-            flat_hash_map<std::string, std::vector<kmer_row>>::iterator seq1 = READ_1_KMERS->getKmers()->begin();
-            flat_hash_map<std::string, std::vector<kmer_row>>::iterator seq1_end = READ_1_KMERS->getKmers()->end();
 
-            while (seq1 != seq1_end) {
+        READ_1_KMERS->next_chunk();
 
-                for (auto const kRow : seq1->second) {
-                    if (kRow.hash < max_hash) {
-                        kf->insert(kRow.hash);
-                        total_kmers++;
-                        inserted_kmers++;
-                    }
-                    else {
-                        total_kmers++;
-                        continue;
-                    }
+        auto seq1 = READ_1_KMERS->getKmers()->begin();
+        auto seq1_end = READ_1_KMERS->getKmers()->end();
+
+        while (seq1 != seq1_end) {
+
+            for (auto const & kRow : seq1->second) {
+                if (kRow.hash < max_hash) {
+                    kf->incrementCount(kRow.hash);
+                    total_kmers++;
+                    inserted_kmers++;
                 }
-
-                seq1++;
+                else {
+                    total_kmers++;
+                    continue;
+                }
             }
 
+            seq1++;
         }
-        int removed_singletones = 0;
-        if (remove_singletones) {
-            auto* new_kf = new kDataFramePHMAP(kSize);
-            auto it = kf->begin();
-            while (it != kf->end()) {
-                if (it.getCount() > 1) {
-                    new_kf->insert(it.getHashedKmer(), it.getCount());
-                    it++;
-                }
-                removed_singletones++;
-                it++;
-            }
-            cout << "removed " << removed_singletones << " singletones." << endl;
-            new_kf->save(base_filename);
-            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << (inserted_kmers - removed_singletones) << ") << inserted_unique(" << new_kf->size() << ")" << endl;
-        }
-        else {
-            kf->save(base_filename);
-            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique(" << kf->size() << ")" << endl;
-        }
+
     }
+    int removed_singletones = 0;
+    if (remove_singletones) {
+        auto* new_kf = new kDataFramePHMAP(kSize);
+        new_kf->addCountColumn();
+        auto it = kf->begin();
+        while (it != kf->end()) {
+            if (it.getCount() > 1) {
+                new_kf->setCount(it.getHashedKmer(), it.getCount());
+                it++;
+                continue;
+            }
+            removed_singletones++;
+            it++;
+        }
+        cout << "removed " << removed_singletones << " singletones." << endl;
+        new_kf->save(base_filename);
+        cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << (inserted_kmers - removed_singletones) << ") << inserted_unique(" << new_kf->size() << ")" << endl;
+    }
+    else {
+        kf->save(base_filename);
+        cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique(" << kf->size() << ")" << endl;
+    }
+}
 
 
     void protein_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, bool is_dayhoff, string output_prefix, int downsampling_ratio) {
@@ -173,6 +179,8 @@ namespace kSpider {
 
         kmerDecoder* KD = kmerDecoder::getInstance(r1_file_name, chunk_size, PROTEIN, hasher_type, { {"kSize", kSize} });
         kDataFramePHMAP* kf = new kDataFramePHMAP(PROTEIN, hasher_type, { {"kSize", kSize} });
+        kf->addCountColumn();
+        kf->reserve(10000);
 
         int hashing_kmer_kSize = (int)((kSize * 5) / 2);
 
@@ -196,7 +204,7 @@ namespace kSpider {
                     uint64_t kmer_hash = INT_HASHER->hash(kmer.hash);
                     // cout << kmer_hash << endl;
                     if (kmer_hash < max_hash) {
-                        kf->insert(kmer.hash); // Insert the 5-bit representation not the hash val.
+                        kf->incrementCount(kmer.hash); // Insert the 5-bit representation not the hash val.
                         total_kmers++;
                         inserted_kmers++;
                     }

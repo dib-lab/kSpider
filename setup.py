@@ -95,12 +95,17 @@ INCLUDES = [
     'include',
     'lib/argh',
     'lib/kProcessor/include/kProcessor',
+    'lib/kProcessor/include/kProcessor/kDataframes',
     'lib/kProcessor/ThirdParty/MQF/include',
     'lib/kProcessor/ThirdParty/kmerDecoder/include',
     'lib/kProcessor/ThirdParty/kmerDecoder/lib/kseq/include',
     'lib/kProcessor/ThirdParty/sdsl-lite/include',
     'lib/kProcessor/ThirdParty/ntCard/include',
     'lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap',
+    'lib/kProcessor/ThirdParty/caches/include',
+    'lib/kProcessor/ThirdParty/KMC/kmc_api',
+    'lib/kProcessor/ThirdParty/mum-hash',
+    'lib/kProcessor/ThirdParty/Blight',
 ]
 
 check_exist(INCLUDES)
@@ -123,6 +128,7 @@ LIBRARIES_DIRS = [
     f"{kSpider_BUILD_DIR_dir}/lib/kProcessor/ThirdParty/sdsl-lite/lib",
     f"{kSpider_BUILD_DIR_dir}/lib/kProcessor/ThirdParty/kmerDecoder",
     f"{kSpider_BUILD_DIR_dir}/lib/kProcessor/ThirdParty/MQF/ThirdParty/stxxl/lib",
+    f"lib/kProcessor/ThirdParty/Blight",
 ]
 
 check_exist(LIBRARIES_DIRS)
@@ -135,6 +141,7 @@ LIBRARIES = [
     'ntcard',
     'kmerDecoder',
     'stxxl_debug',
+    'blight',
 ]
 
 SWIG_OPTS = [

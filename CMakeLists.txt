@@ -20,6 +20,7 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++fs -fPIC -lgomp -lrt
 add_subdirectory(lib/kProcessor)
 
 include_directories("${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor")
+include_directories("${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor/kDataframes")
 include_directories("${PROJECT_SOURCE_DIR}/lib/kProcessor/ThirdParty/MQF/include")
 
 set(kProcessor_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/lib/kProcessor/include" "${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor")
@@ -31,6 +32,7 @@ include_directories(${kProcessor_INCLUDE_PATH})
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/lib/argh")
+include_directories("${PROJECT_SOURCE_DIR}/lib/kProcessor/ThirdParty/caches/include")
 
 set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap")
 include_directories("${PHMAP_INCLUDE_DIRS}")
