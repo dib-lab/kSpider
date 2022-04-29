@@ -56,17 +56,24 @@ namespace kSpider {
         flat_hash_map<uint32_t, uint32_t> colorsCount;
 
         auto* kf = kDataFrame::load(index_prefix);
-        auto* colorColumn = (deduplicatedColumn<StringColorColumn>*) kf->columns["color"];
+        
+        // old_indexing
+        // auto* colorColumn = (deduplicatedColumn<StringColorColumn>*) kf->columns["color"];
 
-        uint32_t max_color_id = *max_element(colorColumn->index.begin(), colorColumn->index.end());
-        auto color_to_ids = flat_hash_map<uint64_t, std::vector<uint32_t>>(max_color_id);
+        // priorityQueue
+        auto * colorColumn = (deduplicatedColumn<mixVectors>*) kf->columns["color"];
 
+
+        flat_hash_map<uint64_t, std::vector<uint32_t>> color_to_ids;
 
         auto kf_it = kf->begin();
         while (kf_it != kf->end()) {
             uint32_t color_id = colorColumn->index[kf_it.getOrder()];
             colorsCount[color_id]++;
-            vector<uint32_t> group_ids = colorColumn->values->colors->get(color_id);
+            // old indexing
+            // vector<uint32_t> group_ids = colorColumn->values->colors->get(color_id);
+            vector<uint32_t> group_ids = kf->getKmerColumnValue<deduplicatedColumn<mixVectors> >("color", kf_it.getKmer());
+
             color_to_ids[color_id] = std::vector<uint32_t>();
             for (auto& grp_id : group_ids) {
                 if (grp_id >= 0) {

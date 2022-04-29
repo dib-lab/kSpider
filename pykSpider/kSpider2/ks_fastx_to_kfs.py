@@ -18,9 +18,10 @@ import os
 @click.option('--protein', "protein", is_flag=True, show_default=True, default=False, help="parsing protein")
 @click.option('--singletones', "singletones", is_flag=True, show_default=True, default=False, help="remove singletones")
 @click.option('--dayhoff', "dayhoff", is_flag=True, show_default=True, default=False, help="parsing protein in dayhoff encoding")
+@click.option('--ondisk', "ondisk", is_flag=True, show_default=True, default=False, help="on-disk sketch (reduced memory usage)")
 @click.option('-s', '--scale', "downsampling_ratio", required=False, default = 1, help="Downsampling ratio")
 @click.pass_context
-def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_ratio, singletones):
+def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_ratio, singletones, ondisk):
     """
     Sketch sequence files.
     """
@@ -53,16 +54,16 @@ def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_r
 
     if protein_flag:
         ctx.obj.INFO("Processing protein in default mode.")
-        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, False, os.path.basename(fastx), downsampling_ratio)
+        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, False, os.path.basename(fastx), downsampling_ratio, ondisk)
     elif dayhoff_flag:
         ctx.obj.INFO("Processing protein in dayhoff mode.")
-        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, True, os.path.basename(fastx), downsampling_ratio)
+        kSpider_internal.protein_to_kDataFrame(fastx, kSize, chunk_size, True, os.path.basename(fastx), downsampling_ratio, ondisk)
     elif single_end_flag:
         ctx.obj.INFO("Processing single-end reads.")
-        kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size, downsampling_ratio, singletones)
+        kSpider_internal.single_end_to_kDataFrame(fastx, kSize, chunk_size, downsampling_ratio, singletones, ondisk)
     elif paired_end_flag:
         ctx.obj.INFO("Processing paired-end reads.")
-        kSpider_internal.paired_end_to_kDataFrame(r1, r2, kSize, chunk_size, downsampling_ratio, singletones)
+        kSpider_internal.paired_end_to_kDataFrame(r1, r2, kSize, chunk_size, downsampling_ratio, singletones, ondisk)
     else:
         ctx.obj.ERROR("Something went wrong!")
 

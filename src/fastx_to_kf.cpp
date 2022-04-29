@@ -13,7 +13,7 @@
 
 namespace kSpider {
 
-    void paired_end_to_kDataFrame(string r1_file_name, string r2_file_name, int kSize, int chunk_size, int downsampling_ratio, bool remove_singletones) {
+    void paired_end_to_kDataFrame(string r1_file_name, string r2_file_name, int kSize, int chunk_size, int downsampling_ratio, bool remove_singletones, bool ondisk) {
 
         string PE_1_reads_file = r1_file_name;
         string PE_2_reads_file = r2_file_name;
@@ -93,16 +93,30 @@ namespace kSpider {
                 it++;
             }
             cout << "removed " << removed_singletones << " singletones." << endl;
-            new_kf->save(base_filename);
-            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << (inserted_kmers - removed_singletones) << ") << inserted_unique(" << new_kf->size() << ")" << endl;
+        // could be refactored later
+        kDataFrame* kf_mqf;
+        if(ondisk){
+            cout << "converting to on-disk sketch.." << endl;
+            kDataFrameFactory::createBMQF(new_kf, base_filename);
+        }else{
+            kf_mqf = kDataFrameFactory::createMQF(new_kf);
+            kf_mqf->save(base_filename);
         }
+        cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << (inserted_kmers - removed_singletones) << ") << inserted_unique(" << new_kf->size() << ")" << endl;        }
         else {
-            kf->save(base_filename);
-            cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique(" << kf->size() << ")" << endl;
+            kDataFrame* kf_mqf;
+            if(ondisk){
+                cout << "converting to on-disk sketch.." << endl;
+                kDataFrameFactory::createBMQF(kf, base_filename);
+            }else{
+                kf_mqf = kDataFrameFactory::createMQF(kf);
+                kf_mqf->save(base_filename);
+            }
+        cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique(" << kf->size() << ")" << endl;
         }
     }
 
-    void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ratio, bool remove_singletones) {
+    void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ratio, bool remove_singletones, bool ondisk) {
 
     string PE_1_reads_file = r1_file_name;
 
@@ -160,17 +174,32 @@ namespace kSpider {
             it++;
         }
         cout << "removed " << removed_singletones << " singletones." << endl;
-        new_kf->save(base_filename);
+        // could be refactored later
+        kDataFrame* kf_mqf;
+        if(ondisk){
+            cout << "converting to on-disk sketch.." << endl;
+            kDataFrameFactory::createBMQF(new_kf, base_filename);
+        }else{
+            kf_mqf = kDataFrameFactory::createMQF(new_kf);
+            kf_mqf->save(base_filename);
+        }
         cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << (inserted_kmers - removed_singletones) << ") << inserted_unique(" << new_kf->size() << ")" << endl;
     }
     else {
-        kf->save(base_filename);
+        kDataFrame* kf_mqf;
+        if(ondisk){
+            cout << "converting to on-disk sketch.." << endl;
+            kDataFrameFactory::createBMQF(kf, base_filename);
+        }else{
+            kf_mqf = kDataFrameFactory::createMQF(kf);
+            kf_mqf->save(base_filename);
+        }
         cout << "filename(" << base_filename << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ") << inserted_unique(" << kf->size() << ")" << endl;
     }
 }
 
 
-    void protein_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, bool is_dayhoff, string output_prefix, int downsampling_ratio) {
+    void protein_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, bool is_dayhoff, string output_prefix, int downsampling_ratio, bool ondisk) {
 
         string PE_1_reads_file = r1_file_name;
 
@@ -216,8 +245,15 @@ namespace kSpider {
             }
         }
 
+        kDataFrame* kf_mqf;
+        if(ondisk){
+            cout << "converting to on-disk sketch.." << endl;
+            kDataFrameFactory::createBMQF(kf, output_prefix);
+        }else{
+            kf_mqf = kDataFrameFactory::createMQF(kf);
+            kf_mqf->save(output_prefix);
+        }
         cout << "filename(" << output_prefix << "): total(" << total_kmers << ") inserted(" << inserted_kmers << ")" << endl;
-        kf->save(output_prefix);
     }
 
 }

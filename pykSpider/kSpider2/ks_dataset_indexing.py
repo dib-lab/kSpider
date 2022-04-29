@@ -27,4 +27,4 @@ def main(ctx, sketches_dir):
         ctx.obj.ERROR(f"Inconsistent sketches files.")
     
     ctx.obj.INFO(f"Indexing sketches in {sketches_dir}.")
-    kSpider_internal.index_datasets(sketches_dir)
+    kSpider_internal.datasets_indexing(sketches_dir)

@@ -11,8 +11,7 @@
 #include <string.h>
 #include "defaultColumn.hpp"
 #include "kDataframes/kDataFrameSTL.hpp"
-
-#define LOWEST_PERCENTILE 5
+#include <fstream>
 
 
 // thanks to https://stackoverflow.com/a/8615450/3371177
@@ -84,6 +83,58 @@ namespace kSpider {
         KF->save(index_prefix);
     }
 
+    void datasets_indexing(string kfs_dir) {
+
+        std::string dir_prefix = kfs_dir.substr(kfs_dir.find_last_of("/\\") + 1);
+        vector<kDataFrame*> kf_vec;
+        flat_hash_map<uint32_t, string> namesmap;
+
+        int file_id = 0;
+
+        for (const auto& dirEntry : glob(kfs_dir + "/*")) {
+            string file_name = (string)dirEntry;
+            size_t lastindex = file_name.find_last_of(".");
+            string kf_prefix = file_name.substr(0, lastindex);
+            std::string kf_basename = kf_prefix.substr(kf_prefix.find_last_of("/\\") + 1);
+
+            std::string::size_type idx;
+            idx = file_name.rfind('.');
+            std::string extension = "";
+            if (idx != std::string::npos) extension = file_name.substr(idx + 1);
+            hashingModes _hm;
+            int detected_kSize;
+
+            if (extension == "mqf" || extension == "bmqf" || extension == "map" || extension == "phmap") {
+                if (extension == "phmap") {
+                    throw logic_error("Index priorityQ must work on sorted kDataFrames (mqf, bmqf, map)");
+                }
+                else {
+                    namesmap[++file_id] = kf_basename;
+                    kf_vec.push_back(kDataFrame::load(kf_prefix));
+                }
+            }
+            else {
+                continue;
+            }
+        }
+
+
+        uint64_t kSize = kf_vec[0]->size();
+
+        auto* KF = kDataFrameFactory::createPHMAP(kSize);
+
+        kProcessor::indexPriorityQueue(kf_vec, "", KF);
+
+        KF->save(dir_prefix);
+        ofstream f_namesmap;
+        f_namesmap.open(dir_prefix + ".kSpider_datasets_namesMap");
+        for (std::pair<const unsigned int, class std::basic_string<char> >& name : namesmap)
+            f_namesmap << name.first << "," << name.second << endl;
+        f_namesmap.close();
+    }
+
+
+    // Old indexing
     void index_datasets(string kfs_dir) {
 
         kDataFrame* frame;
@@ -298,6 +349,12 @@ namespace kSpider {
 
         cout << "saving to " << dir_prefix << " ..." << endl;
         frame->save(dir_prefix);
+
+        ofstream f_namesmap;
+        f_namesmap.open(dir_prefix + ".kSpider_namesMap");
+        for (std::pair<const unsigned int, class std::basic_string<char> >& name : colors->values->namesMap)
+            f_namesmap << name.first << "," << name.second << endl;
+        f_namesmap.close();
 
     }
 }
