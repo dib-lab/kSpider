@@ -104,26 +104,7 @@ namespace kSpider {
         int detected_kSize = 0;
 
         int total_sigs_number = 0;
-
-        // get kSize and type
-        for (const auto& dirEntry : glob2(sigs_dir + "/*")) {
-            string file_name = (string)dirEntry;
-            size_t lastindex = file_name.find_last_of(".");
-            string sig_prefix = file_name.substr(0, lastindex);
-            std::string::size_type idx;
-            idx = file_name.rfind('.');
-            std::string extension = "";
-            if (idx != std::string::npos) extension = file_name.substr(idx + 1);
-            if (extension == "sig") {
-                std::ifstream tmp_stream(file_name);
-                JSON tmp_sig(tmp_stream);
-                detected_kSize = tmp_sig[0]["signatures"][0]["ksize"].as<int>();
-                frame = new kDataFramePHMAP(detected_kSize, mumur_hasher); break;
-            }
-            else {
-                continue;
-            }
-        }
+        frame = new kDataFramePHMAP(selective_kSize, mumur_hasher);
 
         for (const auto& dirEntry : glob2(sigs_dir + "/*")) {
             string file_name = (string)dirEntry;
@@ -141,6 +122,10 @@ namespace kSpider {
             JSON sig(tmp_stream);
             int number_of_sub_sigs = sig[0]["signatures"].size();
             string general_name = sig[0]["name"].as<std::string>();
+            if (general_name == "") {
+                std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
+                general_name = sig_basename;
+            }
 
             // uncomment if if groupname = sig_name
             // total_sigs_number++;
@@ -215,6 +200,10 @@ namespace kSpider {
             JSON sig(sig_stream);
             int number_of_sub_sigs = sig[0]["signatures"].size();
             string general_name = sig[0]["name"].as<std::string>();
+            if (general_name == "") {
+                std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
+                general_name = sig_basename;
+            }
 
 
             //START
@@ -222,7 +211,7 @@ namespace kSpider {
                 int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
                 if (current_kSize != selective_kSize) continue;
 
-                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << sig_basename << " k:" << selective_kSize << " ... " << endl;
+                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << general_name << " k:" << selective_kSize << " ... " << endl;
                 string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
                 string sig_name = md5sum + ":" + general_name;
 
