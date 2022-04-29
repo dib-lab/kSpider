@@ -21,10 +21,10 @@ namespace kSpider {
         std::string base_filename = PE_1_reads_file.substr(PE_1_reads_file.find_last_of("/\\") + 1);
         base_filename = base_filename.substr(0, base_filename.find('_'));
 
-        kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
-        kmerDecoder* READ_2_KMERS = kmerDecoder::getInstance(r2_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
+        kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, integer_hasher, { {"kSize", kSize} });
+        kmerDecoder* READ_2_KMERS = kmerDecoder::getInstance(r2_file_name, chunk_size, KMERS, integer_hasher, { {"kSize", kSize} });
 
-        auto* kf = new kDataFramePHMAP(KMERS, mumur_hasher, { {"kSize", kSize} });
+        auto* kf = new kDataFramePHMAP(KMERS, integer_hasher, { {"kSize", kSize} });
         kf->addCountColumn();
         kf->reserve(10000);
 
@@ -32,6 +32,8 @@ namespace kSpider {
         uint64_t max_hash = UINT64_MAX / (uint64_t)downsampling_ratio;
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
+
+        kmerDecoder * MURMUR_HASHER = new Kmers(kSize, mumur_hasher);
 
 
         while (!READ_1_KMERS->end() && !READ_2_KMERS->end()) {
@@ -49,7 +51,7 @@ namespace kSpider {
             while (seq1 != seq1_end && seq2 != seq2_end) {
 
                 for (auto const kRow : seq1->second) {
-                    if (kRow.hash < max_hash) {
+                    if (MURMUR_HASHER->hash_kmer(kRow.str) < max_hash) {
                         kf->incrementCount(kRow.hash);
                         total_kmers++;
                         inserted_kmers++;
@@ -62,7 +64,7 @@ namespace kSpider {
 
 
                 for (auto const kRow : seq2->second) {
-                    if (kRow.hash < max_hash) {
+                    if (MURMUR_HASHER->hash_kmer(kRow.str) < max_hash) {
                         kf->incrementCount(kRow.hash);
                         total_kmers++;
                         inserted_kmers++;
@@ -122,9 +124,10 @@ namespace kSpider {
 
     std::string base_filename = PE_1_reads_file.substr(PE_1_reads_file.find_last_of("/\\") + 1);
 
-    kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, mumur_hasher, { {"kSize", kSize} });
+    kmerDecoder* READ_1_KMERS = kmerDecoder::getInstance(r1_file_name, chunk_size, KMERS, integer_hasher, { {"kSize", kSize} });
+    kmerDecoder * MURMUR_HASHER = new Kmers(kSize, mumur_hasher);
 
-    auto* kf = new kDataFramePHMAP(KMERS, mumur_hasher, { {"kSize", kSize} });
+    auto* kf = new kDataFramePHMAP(KMERS, integer_hasher, { {"kSize", kSize} });
     kf->addCountColumn();
     kf->reserve(10000);
     int Reads_chunks_counter = 0;
@@ -144,7 +147,7 @@ namespace kSpider {
         while (seq1 != seq1_end) {
 
             for (auto const & kRow : seq1->second) {
-                if (kRow.hash < max_hash) {
+                if (MURMUR_HASHER->hash_kmer(kRow.str) < max_hash) {
                     kf->incrementCount(kRow.hash);
                     total_kmers++;
                     inserted_kmers++;
@@ -207,6 +210,8 @@ namespace kSpider {
         if (is_dayhoff) hasher_type = proteinDayhoff_hasher;
 
         kmerDecoder* KD = kmerDecoder::getInstance(r1_file_name, chunk_size, PROTEIN, hasher_type, { {"kSize", kSize} });
+        kmerDecoder * MURMUR_HASHER = new Kmers(kSize, mumur_hasher);
+
         kDataFramePHMAP* kf = new kDataFramePHMAP(PROTEIN, hasher_type, { {"kSize", kSize} });
         kf->addCountColumn();
         kf->reserve(10000);
@@ -232,7 +237,7 @@ namespace kSpider {
                     // downsampling
                     uint64_t kmer_hash = INT_HASHER->hash(kmer.hash);
                     // cout << kmer_hash << endl;
-                    if (kmer_hash < max_hash) {
+                    if (MURMUR_HASHER->hash_kmer(kmer.str) < max_hash) {
                         kf->incrementCount(kmer.hash); // Insert the 5-bit representation not the hash val.
                         total_kmers++;
                         inserted_kmers++;
