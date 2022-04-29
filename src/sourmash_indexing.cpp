@@ -84,7 +84,7 @@ inline std::vector<std::string> glob2(const std::string& pattern) {
 
 namespace kSpider {
 
-    void sourmash_sigs_indexing(string sigs_dir) {
+    void sourmash_sigs_indexing(string sigs_dir, int selective_kSize) {
 
         kDataFrame* frame;
         std::string dir_prefix = sigs_dir.substr(sigs_dir.find_last_of("/\\") + 1);
@@ -118,7 +118,6 @@ namespace kSpider {
                 std::ifstream tmp_stream(file_name);
                 JSON tmp_sig(tmp_stream);
                 detected_kSize = tmp_sig[0]["signatures"][0]["ksize"].as<int>();
-                cout << "Detected kSize: " << detected_kSize << endl;
                 frame = new kDataFramePHMAP(detected_kSize, mumur_hasher); break;
             }
             else {
@@ -141,26 +140,21 @@ namespace kSpider {
             std::ifstream tmp_stream(file_name);
             JSON sig(tmp_stream);
             int number_of_sub_sigs = sig[0]["signatures"].size();
-            int current_kSize = sig[0]["signatures"][0]["ksize"].as<int>();
             string general_name = sig[0]["name"].as<std::string>();
 
-
-            if (current_kSize != detected_kSize) {
-                cout << "skipping this signature as it has different kSize of (" << current_kSize << ")" << endl;
-                continue;
-            }
-
-            total_sigs_number++;
+            // uncomment if if groupname = sig_name
+            // total_sigs_number++;
 
             for (int i = 0; i < number_of_sub_sigs; i++) {
-                cout << "kSize: " << sig[0]["signatures"][i]["ksize"].as<int>() << endl;
+                int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
+                if (current_kSize != selective_kSize) continue;
+
+                total_sigs_number++;
+
+
+                // std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
                 string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
                 string sig_name = md5sum + ":" + general_name;
-
-
-                // total_sigs_number++;
-
-                std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
 
                 // Here we can decide
                 seqName = sig_name;
@@ -200,17 +194,16 @@ namespace kSpider {
 
         uint64_t lastTag = 0;
         readID = 0;
-        int __batch_count = 0;
 
         int processed_sigs_count = 0;
 
+        // START
         for (const auto& dirEntry : glob2(sigs_dir + "/*")) {
             string file_name = (string)dirEntry;
             size_t lastindex = file_name.find_last_of(".");
             string sig_prefix = file_name.substr(0, lastindex);
 
             std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
-
 
             std::string::size_type idx;
             idx = file_name.rfind('.');
@@ -221,34 +214,31 @@ namespace kSpider {
             std::ifstream sig_stream(file_name);
             JSON sig(sig_stream);
             int number_of_sub_sigs = sig[0]["signatures"].size();
-            int current_kSize = sig[0]["signatures"][0]["ksize"].as<int>();
             string general_name = sig[0]["name"].as<std::string>();
 
 
-            if (current_kSize != detected_kSize) {
-                cout << "skipping this signature as it has different kSize of (" << current_kSize << ")" << endl;
-                continue;
-            }
-
-            cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << sig_basename << " k:" << current_kSize << " ... " << endl;
-
-
-            flat_hash_map<uint64_t, uint64_t> convertMap;
-
-            string readName = general_name;
-            string groupName = general_name;
-
-            uint64_t readTag = groupNameMap.find(groupName)->second;
-
-
-            convertMap.clear();
-            convertMap.insert(make_pair(0, readTag));
-            convertMap.insert(make_pair(readTag, readTag));
-
             //START
             for (int i = 0; i < number_of_sub_sigs; i++) {
+                int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
+                if (current_kSize != selective_kSize) continue;
+
+                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << sig_basename << " k:" << selective_kSize << " ... " << endl;
                 string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
                 string sig_name = md5sum + ":" + general_name;
+
+                flat_hash_map<uint64_t, uint64_t> convertMap;
+
+                string readName = sig_name;
+                string groupName = general_name;
+
+                uint64_t readTag = groupNameMap.find(groupName)->second;
+
+
+                convertMap.clear();
+                convertMap.insert(make_pair(0, readTag));
+                convertMap.insert(make_pair(readTag, readTag));
+
+
                 auto loaded_sig_it = sig[0]["signatures"][i]["mins"].as_array().begin();
                 while (loaded_sig_it != sig[0]["signatures"][i]["mins"].as_array().end()) {
                     uint64_t hashed_kmer = loaded_sig_it->as<uint64_t>();
@@ -321,20 +311,19 @@ namespace kSpider {
                     }
                     loaded_sig_it++;
                 }
+                readID += 1;
+                groupCounter[groupName]--;
+                if (colorsCount[readTag] == 0) {
+                    if (groupCounter[groupName] == 0) {
+                        freeColors.push(readTag);
+                        legend->erase(readTag);
+                    }
+
+                }
+                cout << "   saved_kmers(~" << frame->size() << ")." << endl << endl;
             }
             // END
 
-            // cout << "   Removed kmers from percentile=(" << removed_kmers_from_percentile <<") out of ("<< real_no_of_kmers <<")" << endl;
-            readID += 1;
-            groupCounter[groupName]--;
-            if (colorsCount[readTag] == 0) {
-                if (groupCounter[groupName] == 0) {
-                    freeColors.push(readTag);
-                    legend->erase(readTag);
-                }
-
-            }
-            cout << "   saved_kmers(~" << frame->size() << ")." << endl << endl;
         }
 
 
