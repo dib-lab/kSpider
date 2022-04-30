@@ -124,7 +124,7 @@ namespace kSpider {
             idx = file_name.rfind('.');
             std::string extension = "";
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
-            if (extension != "sig") continue;
+            if (extension != "sig" || extension != "gz") continue;
 
             zstr::ifstream tmp_stream(file_name);
             JSON sig(tmp_stream);
@@ -193,7 +193,8 @@ namespace kSpider {
             idx = file_name.rfind('.');
             std::string extension = "";
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
-            if (extension != "sig") continue;
+            if (extension != "sig" || extension != "gz") continue;
+
 
             zstr::ifstream sig_stream(file_name);
             JSON sig(sig_stream);
