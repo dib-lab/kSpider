@@ -33,14 +33,17 @@ include_directories(${kProcessor_INCLUDE_PATH})
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/lib/argh")
 include_directories("${PROJECT_SOURCE_DIR}/lib/json_parser")
+include_directories("${PROJECT_SOURCE_DIR}/lib/gzstream")
 include_directories("${PROJECT_SOURCE_DIR}/lib/kProcessor/ThirdParty/caches/include")
 
 set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap")
 include_directories("${PHMAP_INCLUDE_DIRS}")
 
+add_subdirectory("lib/zstr")
+
 add_library(kSpider STATIC src/pairwise.cpp src/index.cpp src/fastx_to_kf.cpp src/sourmash_indexing.cpp  ${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor)
 set_target_properties(kSpider PROPERTIES POSITION_INDEPENDENT_CODE 1 CXX_STANDARD 17)
-target_link_libraries (kSpider kProcessor z)
+target_link_libraries (kSpider kProcessor z zstr::zstr)
 target_include_directories(kSpider INTERFACE ${PHMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor)
 
 # add_executable(index_kframes apps/index_kframes.cpp)
