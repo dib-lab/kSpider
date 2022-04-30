@@ -22,6 +22,8 @@ namespace kSpider {
     void datasets_indexing(string kfs_dir);
 
     void sourmash_index_kp1(string sigs_dir, int selective_kSize);
+    void sourmash_index_kp1_fast(string sigs_dir, int selective_kSize);
+    
 
     void paired_end_to_kDataFrame(string r1_file_name, string r2_file_name, int kSize, int chunk_size, int downsampling_ratio, bool remove_singletones, bool ondisk);
     void single_end_to_kDataFrame(string r1_file_name, int kSize, int chunk_size, int downsampling_ratio, bool remove_singletones, bool ondisk);

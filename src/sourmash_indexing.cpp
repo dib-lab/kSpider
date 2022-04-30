@@ -332,4 +332,245 @@ namespace kSpider {
         f_namesmap.close();
 
     }
+
+    void sourmash_index_kp1_fast(string sigs_dir, int selective_kSize) {
+
+        kDataFrame* frame;
+        std::string dir_prefix = sigs_dir.substr(sigs_dir.find_last_of("/\\") + 1);
+
+        flat_hash_map<string, string> namesMap;
+        string names_fileName = sigs_dir;
+
+        flat_hash_map<string, uint64_t> tagsMap;
+        flat_hash_map<string, uint64_t> groupNameMap;
+        auto* legend = new flat_hash_map<uint64_t, std::vector<uint32_t>>();
+        flat_hash_map<uint64_t, uint64_t> colorsCount;
+        uint64_t readID = 0, groupID = 1;
+        string seqName, groupName;
+        string line;
+        priority_queue<uint64_t, vector<uint64_t>, std::greater<uint64_t>> freeColors;
+        flat_hash_map<string, uint64_t> groupCounter;
+
+        int total_sigs_number = 0;
+        int kframe_kSize = selective_kSize;
+        if (selective_kSize > 31) kframe_kSize = selective_kSize;
+        frame = new kDataFramePHMAP(kframe_kSize, mumur_hasher);
+
+
+
+        auto* colors = new deduplicatedColumn< StringColorColumn>();
+        frame->addColumn("color", (Column*)colors);
+
+        for (const auto& dirEntry : glob2(sigs_dir + "/*")) {
+            string file_name = (string)dirEntry;
+            size_t lastindex = file_name.find_last_of(".");
+            string sig_prefix = file_name.substr(0, lastindex);
+            std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
+
+            std::string::size_type idx;
+            idx = file_name.rfind('.');
+            std::string extension = "";
+            if (idx != std::string::npos) extension = file_name.substr(idx + 1);
+            if (extension != "sig" && extension != "gz") continue;
+
+
+            // uncomment if if groupname = sig_name
+
+            total_sigs_number++;
+
+            // uncomment to check all kSizes
+
+            // zstr::ifstream tmp_stream(file_name);
+            // JSON sig(tmp_stream);
+            // int number_of_sub_sigs = sig[0]["signatures"].size();
+            // string general_name = sig[0]["name"].as<std::string>();
+            // if (general_name == "") {
+            //     general_name = sig_basename;
+            // }
+
+            // vector<int> found_kSizes;
+
+            // for (int i = 0; i < number_of_sub_sigs; i++) {
+            //     int _kSize = sig[0]["signatures"][i]["ksize"].as<int>();
+            //     found_kSizes.emplace_back(_kSize);
+            // }
+
+            // Means that kSize was detected
+            // bool valid_sig = std::find(found_kSizes.begin(), found_kSizes.end(), selective_kSize) != found_kSizes.end();
+            // if (!valid_sig) continue;
+
+            seqName = sig_basename;
+            groupName = sig_basename;
+
+            namesMap.insert(make_pair(seqName, groupName));
+            auto it = groupNameMap.find(groupName);
+            groupCounter[groupName]++;
+            if (it == groupNameMap.end()) {
+                groupNameMap.insert(make_pair(groupName, groupID));
+                tagsMap.insert(make_pair(to_string(groupID), groupID));
+                vector<uint32_t> tmp;
+                tmp.clear();
+                tmp.push_back(groupID);
+                legend->insert(make_pair(groupID, tmp));
+                colorsCount.insert(make_pair(groupID, 0));
+                groupID++;
+            }
+        }
+
+        cout << "namesmap construction done..." << endl;
+
+
+        flat_hash_map<uint64_t, string> inv_groupNameMap;
+        for (auto& _ : groupNameMap)
+            inv_groupNameMap[_.second] = _.first;
+
+        string kmer;
+        int __batch_count = 0;
+        readID = 0;
+        int processed_sigs_count = 0;
+
+        for (const auto& dirEntry : glob2(sigs_dir + "/*")) {
+            string file_name = (string)dirEntry;
+            size_t lastindex = file_name.find_last_of(".");
+            string sig_prefix = file_name.substr(0, lastindex);
+
+            std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
+
+
+            std::string::size_type idx;
+            idx = file_name.rfind('.');
+            std::string extension = "";
+            if (idx != std::string::npos) extension = file_name.substr(idx + 1);
+            if (extension != "sig" && extension != "gz") continue;
+
+
+            zstr::ifstream sig_stream(file_name);
+            JSON sig(sig_stream);
+            int number_of_sub_sigs = sig[0]["signatures"].size();
+
+            // start
+
+            for (int i = 0; i < number_of_sub_sigs; i++) {
+
+                int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
+                if (current_kSize != selective_kSize) continue;
+
+                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << sig_basename << " k:" << selective_kSize << " ... " << endl;
+
+                string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
+                string sig_name = sig_basename;
+                string readName = sig_basename;
+                string groupName = sig_basename;
+
+                flat_hash_map<uint64_t, uint64_t> convertMap;
+                auto loaded_sig_it = sig[0]["signatures"][i]["mins"].as_array().begin();
+                uint64_t readTag = groupNameMap.find(groupName)->second;
+                convertMap.clear();
+                convertMap.insert(make_pair(0, readTag));
+                convertMap.insert(make_pair(readTag, readTag));
+
+                while (loaded_sig_it != sig[0]["signatures"][i]["mins"].as_array().end()) {
+                    string groupName = sig_basename;
+                    uint64_t hashed_kmer = loaded_sig_it->as<uint64_t>();
+
+                    frame->insert(hashed_kmer);
+
+                    uint64_t kmerOrder = frame->getkmerOrder(hashed_kmer);
+                    if (colors->size() < frame->size() + 1)
+                        colors->resize(frame->size() + 1);
+                    uint64_t currentTag = colors->index[kmerOrder];
+                    auto itc = convertMap.find(currentTag);
+                    if (itc == convertMap.end()) {
+                        vector<uint32_t> colors = legend->find(currentTag)->second;
+                        auto tmpiT = find(colors.begin(), colors.end(), readTag);
+                        if (tmpiT == colors.end()) {
+                            colors.push_back(readTag);
+                            sort(colors.begin(), colors.end());
+                        }
+
+                        string colorsString = to_string(colors[0]);
+                        for (unsigned int k = 1; k < colors.size(); k++) {
+                            colorsString += ";" + to_string(colors[k]);
+                        }
+
+                        auto itTag = tagsMap.find(colorsString);
+                        if (itTag == tagsMap.end()) {
+                            uint64_t newColor;
+                            if (freeColors.empty()) {
+                                newColor = groupID++;
+                            }
+                            else {
+                                newColor = freeColors.top();
+                                freeColors.pop();
+                            }
+
+                            tagsMap.insert(make_pair(colorsString, newColor));
+                            legend->insert(make_pair(newColor, colors));
+                            itTag = tagsMap.find(colorsString);
+                            colorsCount[newColor] = 0;
+                        }
+                        uint64_t newColor = itTag->second;
+
+                        convertMap.insert(make_pair(currentTag, newColor));
+                        itc = convertMap.find(currentTag);
+                    }
+
+                    if (itc->second != currentTag) {
+
+                        colorsCount[currentTag]--;
+                        if (colorsCount[currentTag] == 0 && currentTag != 0) {
+                            auto _invGroupNameIT = inv_groupNameMap.find(currentTag);
+                            if (_invGroupNameIT == inv_groupNameMap.end()) {
+                                freeColors.push(currentTag);
+
+                                vector<uint32_t> colors = legend->find(currentTag)->second;
+                                string colorsString = to_string(colors[0]);
+                                for (unsigned int k = 1; k < colors.size(); k++) {
+                                    colorsString += ";" + to_string(colors[k]);
+                                }
+                                tagsMap.erase(colorsString);
+
+                                legend->erase(currentTag);
+                                if (convertMap.find(currentTag) != convertMap.end())
+                                    convertMap.erase(currentTag);
+                            }
+
+                        }
+                        colorsCount[itc->second]++;
+                    }
+
+                    colors->index[kmerOrder] = itc->second;
+
+
+                    readID += 1;
+                    groupCounter[groupName]--;
+                    if (colorsCount[readTag] == 0) {
+                        if (groupCounter[groupName] == 0) {
+                            freeColors.push(readTag);
+                            legend->erase(readTag);
+                        }
+                    }
+                    loaded_sig_it++;
+                }
+
+            }
+        }
+
+        colors->values = new StringColorColumn(legend, groupCounter.size());
+        delete legend;
+        for (auto& iit : namesMap) {
+            uint32_t sampleID = groupNameMap[iit.second];
+            colors->values->namesMap[sampleID] = iit.second;
+        }
+
+        cout << "saving to " << dir_prefix << " ..." << endl;
+        frame->save(dir_prefix);
+
+        ofstream f_namesmap;
+        f_namesmap.open(dir_prefix + ".kSpider_namesMap");
+        for (std::pair<const unsigned int, class std::basic_string<char> >& name : colors->values->namesMap)
+            f_namesmap << name.first << "," << name.second << endl;
+        f_namesmap.close();
+
+    }
 }
