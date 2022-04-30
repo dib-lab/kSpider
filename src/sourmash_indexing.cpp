@@ -107,7 +107,9 @@ namespace kSpider {
         flat_hash_map<string, uint64_t> groupCounter;
 
         int total_sigs_number = 0;
-        frame = new kDataFramePHMAP(selective_kSize, mumur_hasher);
+        int kframe_kSize = selective_kSize;
+        if (selective_kSize > 31) kframe_kSize = selective_kSize;
+        frame = new kDataFramePHMAP(kframe_kSize, mumur_hasher);
 
 
 
@@ -124,7 +126,7 @@ namespace kSpider {
             idx = file_name.rfind('.');
             std::string extension = "";
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
-            if (extension != "sig" || extension != "gz") continue;
+            if (extension != "sig" && extension != "gz") continue;
 
             zstr::ifstream tmp_stream(file_name);
             JSON sig(tmp_stream);
@@ -193,7 +195,7 @@ namespace kSpider {
             idx = file_name.rfind('.');
             std::string extension = "";
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
-            if (extension != "sig" || extension != "gz") continue;
+            if (extension != "sig" && extension != "gz") continue;
 
 
             zstr::ifstream sig_stream(file_name);
