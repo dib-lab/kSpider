@@ -34,7 +34,7 @@
 #include <iostream>
 #include <climits>
 #include <fstream>
-#include "gzstream.h"
+#include "zstr.hpp"
 
 static char const* RSJobjectbrackets = "{}";
 static char const* RSJarraybrackets = "[]";
@@ -258,12 +258,11 @@ public:
         std::istream& is = ifs;
         data = std::string ( (std::istreambuf_iterator<char>(is)), (std::istreambuf_iterator<char>()) );
     }
-
-    RSJresource (igzstream& ifz) : _exists (true), parsed_data_p (NULL) {
-        std::istream& is = ifz;
-        data = std::string ( (std::istreambuf_iterator<char>(is)), (std::istreambuf_iterator<char>()) );
-    }
     
+    RSJresource (zstr::ifstream& ifs) : _exists (true), parsed_data_p (NULL) {
+        data = std::string((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    }
+
     // free allocated memory for parsed data
     ~RSJresource();
     
