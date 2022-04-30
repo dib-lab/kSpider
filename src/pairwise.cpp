@@ -58,10 +58,10 @@ namespace kSpider {
         auto* kf = kDataFrame::load(index_prefix);
         
         // old_indexing
-        // auto* colorColumn = (deduplicatedColumn<StringColorColumn>*) kf->columns["color"];
+        auto* colorColumn = (deduplicatedColumn<StringColorColumn>*) kf->columns["color"];
 
         // priorityQueue
-        auto * colorColumn = (deduplicatedColumn<mixVectors>*) kf->columns["color"];
+        // auto * colorColumn = (deduplicatedColumn<mixVectors>*) kf->columns["color"];
 
 
         flat_hash_map<uint64_t, std::vector<uint32_t>> color_to_ids;
@@ -71,8 +71,9 @@ namespace kSpider {
             uint32_t color_id = colorColumn->index[kf_it.getOrder()];
             colorsCount[color_id]++;
             // old indexing
-            // vector<uint32_t> group_ids = colorColumn->values->colors->get(color_id);
-            vector<uint32_t> group_ids = kf->getKmerColumnValue<deduplicatedColumn<mixVectors> >("color", kf_it.getKmer());
+            vector<uint32_t> group_ids = colorColumn->values->colors->get(color_id);
+            // priorityQueue
+            // vector<uint32_t> group_ids = kf->getKmerColumnValue<deduplicatedColumn<mixVectors> >("color", kf_it.getKmer());
 
             color_to_ids[color_id] = std::vector<uint32_t>();
             for (auto& grp_id : group_ids) {
@@ -84,7 +85,7 @@ namespace kSpider {
         }
 
         // Free some memory
-        cout << "[INFO]" << "deleteing loaded kf." << endl;
+        cout << "[INFO]" << "deleteing loaded index." << endl;
         delete kf;
 
 
