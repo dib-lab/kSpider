@@ -171,12 +171,12 @@ namespace kSpider {
             }
         }
 
-        cout << "namesmap construction done..." << endl;
-        for (auto& [_name, _group] : namesMap) {
-            cout << "_name: " << _name << ", _group: " << endl;
-        }
+        // cout << "namesmap construction done..." << endl;
+        // for (auto& [_name, _group] : namesMap) {
+        //     cout << "_name: " << _name << ", _group: " << endl;
+        // }
 
-        cout << "___________________" << endl;
+        // cout << "___________________" << endl;
 
 
 
@@ -220,7 +220,7 @@ namespace kSpider {
                 int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
                 if (current_kSize != selective_kSize) continue;
 
-                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << general_name << " k:" << selective_kSize << " ... " << endl;
+                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << general_name  << " ... " << endl;
 
                 string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
                 string sig_name = md5sum + ":" + general_name;
@@ -398,12 +398,7 @@ namespace kSpider {
             }
         }
 
-        cout << "namesmap construction done..." << endl;
-        for (auto& [_name, _group] : namesMap) {
-            cout << "_name: " << _name << ", _group: " << endl;
-        }
-
-        cout << "___________________" << endl;
+        // cout << "namesmap construction done..." << endl;
 
 
 
