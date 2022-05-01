@@ -51,7 +51,7 @@ def main(ctx, index_prefix, containment, newick, distance_matrix):
 
     index_basename = os.path.basename(index_prefix)
     kSpider_pairwise_tsv = f"{index_prefix}_kSpider_pairwise.tsv"
-    namesMap_file = f"{index_prefix}.namesMap"
+    namesMap_file = f"{index_prefix}.kSpider_namesMap"
     seqToKmers_tsv = f"{index_prefix}_kSpider_seqToKmersNo.tsv"
     # Check for existing pairwise file
     for _file in [kSpider_pairwise_tsv, namesMap_file, seqToKmers_tsv]:
@@ -74,9 +74,8 @@ def main(ctx, index_prefix, containment, newick, distance_matrix):
 
     namesMap_dict = dict()
     with open(namesMap_file) as NAMES:
-        next(NAMES)
         for line in NAMES:
-            line = line.strip().split()
+            line = line.strip().split(',')
             _id = line[0]
             _name = line[1]
             namesMap_dict[_id] = _name
