@@ -108,7 +108,7 @@ namespace kSpider {
 
         int total_sigs_number = 0;
         int kframe_kSize = selective_kSize;
-        if (selective_kSize > 31) kframe_kSize = selective_kSize;
+        if (selective_kSize > 31) kframe_kSize = 31;
         frame = new kDataFramePHMAP(kframe_kSize, mumur_hasher);
 
 
@@ -353,7 +353,7 @@ namespace kSpider {
 
         int total_sigs_number = 0;
         int kframe_kSize = selective_kSize;
-        if (selective_kSize > 31) kframe_kSize = selective_kSize;
+        if (selective_kSize > 31) kframe_kSize = 31;
         frame = new kDataFramePHMAP(kframe_kSize, mumur_hasher);
 
 
@@ -367,53 +367,53 @@ namespace kSpider {
             string sig_prefix = file_name.substr(0, lastindex);
             std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
 
+
+
             std::string::size_type idx;
             idx = file_name.rfind('.');
             std::string extension = "";
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
             if (extension != "sig" && extension != "gz") continue;
 
+            zstr::ifstream tmp_stream(file_name);
+            JSON sig(tmp_stream);
+            int number_of_sub_sigs = sig[0]["signatures"].size();
+            string general_name = sig[0]["name"].as<std::string>();
+            if (general_name == "") {
+                general_name = sig_basename;
+            }
 
             // uncomment if if groupname = sig_name
+            // total_sigs_number++;
 
-            total_sigs_number++;
+            for (int i = 0; i < number_of_sub_sigs; i++) {
+                int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
+                if (current_kSize != selective_kSize) continue;
 
-            // uncomment to check all kSizes
+                total_sigs_number++;
 
-            // zstr::ifstream tmp_stream(file_name);
-            // JSON sig(tmp_stream);
-            // int number_of_sub_sigs = sig[0]["signatures"].size();
-            // string general_name = sig[0]["name"].as<std::string>();
-            // if (general_name == "") {
-            //     general_name = sig_basename;
-            // }
 
-            // vector<int> found_kSizes;
+                // std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
+                string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
+                string sig_name = md5sum + ":" + general_name;
 
-            // for (int i = 0; i < number_of_sub_sigs; i++) {
-            //     int _kSize = sig[0]["signatures"][i]["ksize"].as<int>();
-            //     found_kSizes.emplace_back(_kSize);
-            // }
+                // Here we can decide
+                seqName = sig_basename;
+                groupName = sig_basename;
 
-            // Means that kSize was detected
-            // bool valid_sig = std::find(found_kSizes.begin(), found_kSizes.end(), selective_kSize) != found_kSizes.end();
-            // if (!valid_sig) continue;
-
-            seqName = sig_basename;
-            groupName = sig_basename;
-
-            namesMap.insert(make_pair(seqName, groupName));
-            auto it = groupNameMap.find(groupName);
-            groupCounter[groupName]++;
-            if (it == groupNameMap.end()) {
-                groupNameMap.insert(make_pair(groupName, groupID));
-                tagsMap.insert(make_pair(to_string(groupID), groupID));
-                vector<uint32_t> tmp;
-                tmp.clear();
-                tmp.push_back(groupID);
-                legend->insert(make_pair(groupID, tmp));
-                colorsCount.insert(make_pair(groupID, 0));
-                groupID++;
+                namesMap.insert(make_pair(seqName, groupName));
+                auto it = groupNameMap.find(groupName);
+                groupCounter[groupName]++;
+                if (it == groupNameMap.end()) {
+                    groupNameMap.insert(make_pair(groupName, groupID));
+                    tagsMap.insert(make_pair(to_string(groupID), groupID));
+                    vector<uint32_t> tmp;
+                    tmp.clear();
+                    tmp.push_back(groupID);
+                    legend->insert(make_pair(groupID, tmp));
+                    colorsCount.insert(make_pair(groupID, 0));
+                    groupID++;
+                }
             }
         }
 
@@ -447,6 +447,11 @@ namespace kSpider {
             zstr::ifstream sig_stream(file_name);
             JSON sig(sig_stream);
             int number_of_sub_sigs = sig[0]["signatures"].size();
+            string general_name = sig[0]["name"].as<std::string>();
+            if (general_name == "") {
+                std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
+                general_name = sig_basename;
+            }
 
             // start
 
@@ -455,10 +460,10 @@ namespace kSpider {
                 int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
                 if (current_kSize != selective_kSize) continue;
 
-                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << sig_basename << " k:" << selective_kSize << " ... " << endl;
+                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << general_name << " k:" << selective_kSize << " ... " << endl;
 
                 string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
-                string sig_name = sig_basename;
+                string sig_name = md5sum + ":" + general_name;
                 string readName = sig_basename;
                 string groupName = sig_basename;
 
@@ -573,4 +578,5 @@ namespace kSpider {
         f_namesmap.close();
 
     }
+
 }
