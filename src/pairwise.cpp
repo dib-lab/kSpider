@@ -77,9 +77,10 @@ namespace kSpider {
 
             color_to_ids[color_id] = std::vector<uint32_t>();
             for (auto& grp_id : group_ids) {
-                if (grp_id >= 0) {
+                // uncomment if priorityQ
+                // if (grp_id >= 0) {
                     color_to_ids[color_id].emplace_back(grp_id);
-                }
+                // }
             }
             kf_it++;
         }

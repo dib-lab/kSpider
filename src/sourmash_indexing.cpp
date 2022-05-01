@@ -172,6 +172,12 @@ namespace kSpider {
         }
 
         cout << "namesmap construction done..." << endl;
+        for (auto& [_name, _group] : namesMap) {
+            cout << "_name: " << _name << ", _group: " << endl;
+        }
+
+        cout << "___________________" << endl;
+
 
 
         flat_hash_map<uint64_t, string> inv_groupNameMap;
@@ -365,8 +371,6 @@ namespace kSpider {
             string file_name = (string)dirEntry;
             size_t lastindex = file_name.find_last_of(".");
             string sig_prefix = file_name.substr(0, lastindex);
-            std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
-
 
 
             std::string::size_type idx;
@@ -380,6 +384,7 @@ namespace kSpider {
             int number_of_sub_sigs = sig[0]["signatures"].size();
             string general_name = sig[0]["name"].as<std::string>();
             if (general_name == "") {
+                std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
                 general_name = sig_basename;
             }
 
@@ -398,8 +403,8 @@ namespace kSpider {
                 string sig_name = md5sum + ":" + general_name;
 
                 // Here we can decide
-                seqName = sig_basename;
-                groupName = sig_basename;
+                seqName = sig_name;
+                groupName = general_name;
 
                 namesMap.insert(make_pair(seqName, groupName));
                 auto it = groupNameMap.find(groupName);
@@ -416,8 +421,6 @@ namespace kSpider {
                 }
             }
         }
-
-        cout << "namesmap construction done..." << endl;
 
 
         flat_hash_map<uint64_t, string> inv_groupNameMap;
@@ -464,8 +467,8 @@ namespace kSpider {
 
                 string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
                 string sig_name = md5sum + ":" + general_name;
-                string readName = sig_basename;
-                string groupName = sig_basename;
+                string readName = sig_name;
+                string groupName = general_name;
 
                 flat_hash_map<uint64_t, uint64_t> convertMap;
                 auto loaded_sig_it = sig[0]["signatures"][i]["mins"].as_array().begin();
