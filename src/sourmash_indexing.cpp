@@ -303,21 +303,18 @@ namespace kSpider {
                         }
                         colorsCount[itc->second]++;
                     }
-
                     colors->index[kmerOrder] = itc->second;
 
-
-                    readID += 1;
-                    groupCounter[groupName]--;
-                    if (colorsCount[readTag] == 0) {
-                        if (groupCounter[groupName] == 0) {
-                            freeColors.push(readTag);
-                            legend->erase(readTag);
-                        }
-                    }
                     loaded_sig_it++;
+                } // END KMERS ITERATION
+                readID += 1;
+                groupCounter[groupName]--;
+                if (colorsCount[readTag] == 0) {
+                    if (groupCounter[groupName] == 0) {
+                        freeColors.push(readTag);
+                        legend->erase(readTag);
+                    }
                 }
-
             }
         }
 
@@ -371,6 +368,7 @@ namespace kSpider {
             string file_name = (string)dirEntry;
             size_t lastindex = file_name.find_last_of(".");
             string sig_prefix = file_name.substr(0, lastindex);
+            std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
 
 
             std::string::size_type idx;
@@ -379,48 +377,34 @@ namespace kSpider {
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
             if (extension != "sig" && extension != "gz") continue;
 
-            zstr::ifstream tmp_stream(file_name);
-            JSON sig(tmp_stream);
-            int number_of_sub_sigs = sig[0]["signatures"].size();
-            string general_name = sig[0]["name"].as<std::string>();
-            if (general_name == "") {
-                std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
-                general_name = sig_basename;
-            }
+            total_sigs_number++;
 
-            // uncomment if if groupname = sig_name
-            // total_sigs_number++;
+            // Here we can decide
+            seqName = sig_basename;
+            groupName = sig_basename;
 
-            for (int i = 0; i < number_of_sub_sigs; i++) {
-                int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
-                if (current_kSize != selective_kSize) continue;
-
-                total_sigs_number++;
-
-
-                // std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
-                string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
-                string sig_name = md5sum + ":" + general_name;
-
-                // Here we can decide
-                seqName = sig_name;
-                groupName = general_name;
-
-                namesMap.insert(make_pair(seqName, groupName));
-                auto it = groupNameMap.find(groupName);
-                groupCounter[groupName]++;
-                if (it == groupNameMap.end()) {
-                    groupNameMap.insert(make_pair(groupName, groupID));
-                    tagsMap.insert(make_pair(to_string(groupID), groupID));
-                    vector<uint32_t> tmp;
-                    tmp.clear();
-                    tmp.push_back(groupID);
-                    legend->insert(make_pair(groupID, tmp));
-                    colorsCount.insert(make_pair(groupID, 0));
-                    groupID++;
-                }
+            namesMap.insert(make_pair(seqName, groupName));
+            auto it = groupNameMap.find(groupName);
+            groupCounter[groupName]++;
+            if (it == groupNameMap.end()) {
+                groupNameMap.insert(make_pair(groupName, groupID));
+                tagsMap.insert(make_pair(to_string(groupID), groupID));
+                vector<uint32_t> tmp;
+                tmp.clear();
+                tmp.push_back(groupID);
+                legend->insert(make_pair(groupID, tmp));
+                colorsCount.insert(make_pair(groupID, 0));
+                groupID++;
             }
         }
+
+        cout << "namesmap construction done..." << endl;
+        for (auto& [_name, _group] : namesMap) {
+            cout << "_name: " << _name << ", _group: " << endl;
+        }
+
+        cout << "___________________" << endl;
+
 
 
         flat_hash_map<uint64_t, string> inv_groupNameMap;
@@ -436,7 +420,6 @@ namespace kSpider {
             string file_name = (string)dirEntry;
             size_t lastindex = file_name.find_last_of(".");
             string sig_prefix = file_name.substr(0, lastindex);
-
             std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
 
 
@@ -450,35 +433,33 @@ namespace kSpider {
             zstr::ifstream sig_stream(file_name);
             JSON sig(sig_stream);
             int number_of_sub_sigs = sig[0]["signatures"].size();
-            string general_name = sig[0]["name"].as<std::string>();
-            if (general_name == "") {
-                std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
-                general_name = sig_basename;
-            }
-
-            // start
 
             for (int i = 0; i < number_of_sub_sigs; i++) {
 
                 int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
                 if (current_kSize != selective_kSize) continue;
 
-                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << general_name << " k:" << selective_kSize << " ... " << endl;
+                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << sig_basename << " k:" << selective_kSize << " ... " << endl;
 
-                string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
-                string sig_name = md5sum + ":" + general_name;
-                string readName = sig_name;
-                string groupName = general_name;
+                string readName = sig_basename;
 
                 flat_hash_map<uint64_t, uint64_t> convertMap;
-                auto loaded_sig_it = sig[0]["signatures"][i]["mins"].as_array().begin();
+                auto it = namesMap.find(readName);
+                if (it == namesMap.end()) {
+                    cerr << "WARNING: " << "read " << readName << "doesn't have a group. Please, check the names file." << endl;
+                    continue;
+                }
+                string groupName = it->second;
+
                 uint64_t readTag = groupNameMap.find(groupName)->second;
+
+
                 convertMap.clear();
                 convertMap.insert(make_pair(0, readTag));
                 convertMap.insert(make_pair(readTag, readTag));
 
+                auto loaded_sig_it = sig[0]["signatures"][i]["mins"].as_array().begin();
                 while (loaded_sig_it != sig[0]["signatures"][i]["mins"].as_array().end()) {
-                    string groupName = sig_basename;
                     uint64_t hashed_kmer = loaded_sig_it->as<uint64_t>();
 
                     frame->insert(hashed_kmer);
@@ -550,26 +531,28 @@ namespace kSpider {
                     colors->index[kmerOrder] = itc->second;
 
 
-                    readID += 1;
-                    groupCounter[groupName]--;
-                    if (colorsCount[readTag] == 0) {
-                        if (groupCounter[groupName] == 0) {
-                            freeColors.push(readTag);
-                            legend->erase(readTag);
-                        }
-                    }
                     loaded_sig_it++;
+                } // END KMERS ITERATION
+                readID += 1;
+                groupCounter[groupName]--;
+                if (colorsCount[readTag] == 0) {
+                    if (groupCounter[groupName] == 0) {
+                        freeColors.push(readTag);
+                        legend->erase(readTag);
+                    }
                 }
 
             }
         }
 
         colors->values = new StringColorColumn(legend, groupCounter.size());
+
         delete legend;
         for (auto& iit : namesMap) {
             uint32_t sampleID = groupNameMap[iit.second];
             colors->values->namesMap[sampleID] = iit.second;
         }
+
 
         cout << "saving to " << dir_prefix << " ..." << endl;
         frame->save(dir_prefix);
