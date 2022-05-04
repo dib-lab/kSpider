@@ -34,7 +34,7 @@ namespace kSpider {
         uint64_t inserted_kmers = 0;
 
         kmerDecoder * MURMUR_HASHER = new Kmers(kSize, mumur_hasher);
-
+        int chunk_count = 0;
 
         while (!READ_1_KMERS->end() && !READ_2_KMERS->end()) {
 
@@ -79,6 +79,7 @@ namespace kSpider {
                 seq2++;
 
             }
+            cout << "[INFO] processed " << ++chunk_count * chunk_size << " seqs.." << endl;
 
         }
         int removed_singletones = 0;
@@ -135,6 +136,8 @@ namespace kSpider {
     uint64_t total_kmers = 0;
     uint64_t inserted_kmers = 0;
 
+    int chunk_count = 0;
+
 
     while (!READ_1_KMERS->end()) {
 
@@ -160,7 +163,7 @@ namespace kSpider {
 
             seq1++;
         }
-
+        cout << "[INFO] processed " << ++chunk_count * chunk_size << " seqs.." << endl;
     }
     int removed_singletones = 0;
     if (remove_singletones) {
@@ -228,6 +231,7 @@ namespace kSpider {
 
         uint64_t total_kmers = 0;
         uint64_t inserted_kmers = 0;
+        int chunk_count = 0;
 
         while (!KD->end()) {
             KD->next_chunk();
@@ -248,6 +252,7 @@ namespace kSpider {
                     }
                 }
             }
+            cout << "[INFO] processed " << ++chunk_count * chunk_size << " seqs.." << endl;
         }
 
         kDataFrame* kf_mqf;
