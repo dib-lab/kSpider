@@ -327,16 +327,15 @@ namespace kSpider {
 
                 colors->index[kmerOrder] = itc->second;
 
-
-                readID += 1;
-                groupCounter[groupName]--;
-                if (colorsCount[readTag] == 0) {
-                    if (groupCounter[groupName] == 0) {
-                        freeColors.push(readTag);
-                        legend->erase(readTag);
-                    }
-                }
                 loaded_kf_it++;
+            } // END KMER ITERATION
+            readID += 1;
+            groupCounter[groupName]--;
+            if (colorsCount[readTag] == 0) {
+                if (groupCounter[groupName] == 0) {
+                    freeColors.push(readTag);
+                    legend->erase(readTag);
+                }
             }
         }
 
