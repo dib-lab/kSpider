@@ -686,7 +686,10 @@ namespace kSpider {
                     uint64_t hashed_kmer = loaded_sig_it->as<uint64_t>();
 
                     // scale
-                    if (hashed_kmer > max_hash) continue;
+                    if (hashed_kmer > max_hash){
+                        loaded_sig_it++;
+                        continue;
+                    }
 
                     frame->insert(hashed_kmer);
 
