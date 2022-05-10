@@ -29,7 +29,7 @@ def main(ctx, sketches_dir, sourmash, kSize, fast, scale):
         ctx.obj.INFO(
             f"Indexing sourmash sigs in {sketches_dir} with kSize={kSize}.")
         if fast:
-            kSpider_internal.sourmash_index_kp1_fast(sketches_dir, kSize, scale)
+            kSpider_internal.sourmash_index_kp1_fast_scaled(sketches_dir, kSize, scale)
         else:
             kSpider_internal.sourmash_index_kp1(sketches_dir, kSize)
 
