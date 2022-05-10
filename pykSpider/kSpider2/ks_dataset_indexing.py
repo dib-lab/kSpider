@@ -12,10 +12,11 @@ from glob import glob
 @cli.command(name="index_datasets", help_priority=5)
 @click.option('--dir', "sketches_dir", required=True, help="Sketches directory (must contain only the sketches)")
 @click.option('-k', '--kmer-size', "kSize", required=False, default=0, type=click.INT, help="kmer size (only if using --sourmash)")
+@click.option('-s', '--scale', "scale", required=False, default=1, type=click.INT, help="scale (only if using --sourmash)")
 @click.option('--sourmash', "sourmash", is_flag=True, show_default=True, default=False, help="use sourmash sigs instead of kProcessor")
 @click.option('--fast', "fast", is_flag=True, show_default=True, default=False, help="if you're certain kSize is found in all smash sigs")
 @click.pass_context
-def main(ctx, sketches_dir, sourmash, kSize, fast):
+def main(ctx, sketches_dir, sourmash, kSize, fast, scale):
     """
     Index all sketches in a directory.
     """
@@ -28,7 +29,7 @@ def main(ctx, sketches_dir, sourmash, kSize, fast):
         ctx.obj.INFO(
             f"Indexing sourmash sigs in {sketches_dir} with kSize={kSize}.")
         if fast:
-            kSpider_internal.sourmash_index_kp1_fast(sketches_dir, kSize)
+            kSpider_internal.sourmash_index_kp1_fast(sketches_dir, kSize, scale)
         else:
             kSpider_internal.sourmash_index_kp1(sketches_dir, kSize)
 
