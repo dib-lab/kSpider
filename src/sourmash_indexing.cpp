@@ -560,7 +560,7 @@ namespace kSpider {
 
     }
 
-    void sourmash_index_kp1_fast_scaled(string sigs_dir, int selective_kSize, int scale) {
+    void sourmash_index_kp1_fast_scaled(string sigs_dir, int selective_kSize, int scale, string out_dir) {
 
         kDataFrame* frame;
         std::string dir_prefix = sigs_dir.substr(sigs_dir.find_last_of("/\\") + 1);
@@ -783,11 +783,11 @@ namespace kSpider {
         }
 
 
-        cout << "saving to " << dir_prefix << " ..." << endl;
-        frame->save(dir_prefix);
+        cout << "saving to " << out_dir + "/" + dir_prefix << " ..." << endl;
+        frame->save(out_dir + "/" + dir_prefix);
 
         ofstream f_namesmap;
-        f_namesmap.open(dir_prefix + ".kSpider_namesMap");
+        f_namesmap.open(out_dir + "/" + dir_prefix + ".kSpider_namesMap");
         for (std::pair<const unsigned int, class std::basic_string<char> >& name : colors->values->namesMap)
             f_namesmap << name.first << "," << name.second << endl;
         f_namesmap.close();

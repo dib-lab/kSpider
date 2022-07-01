@@ -15,8 +15,9 @@ from glob import glob
 @click.option('-s', '--scale', "scale", required=False, default=1, type=click.INT, help="scale (only if using --sourmash)")
 @click.option('--sourmash', "sourmash", is_flag=True, show_default=True, default=False, help="use sourmash sigs instead of kProcessor")
 @click.option('--fast', "fast", is_flag=True, show_default=True, default=False, help="if you're certain kSize is found in all smash sigs")
+@click.option('-o', '--out-dir', "out_dir", required=False, help="output directory", default = "KSpider_out_dir")
 @click.pass_context
-def main(ctx, sketches_dir, sourmash, kSize, fast, scale):
+def main(ctx, sketches_dir, sourmash, kSize, fast, scale, out_dir):
     """
     Index all sketches in a directory.
     """
@@ -29,7 +30,11 @@ def main(ctx, sketches_dir, sourmash, kSize, fast, scale):
         ctx.obj.INFO(
             f"Indexing sourmash sigs in {sketches_dir} with kSize={kSize}.")
         if fast:
-            kSpider_internal.sourmash_index_kp1_fast_scaled(sketches_dir, kSize, scale)
+            try:
+                os.mkdir(out_dir) 
+            except OSError as error:
+                print(error)
+            kSpider_internal.sourmash_index_kp1_fast_scaled(sketches_dir, kSize, scale, out_dir)
         else:
             kSpider_internal.sourmash_index_kp1(sketches_dir, kSize)
 
