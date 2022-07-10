@@ -110,9 +110,10 @@ namespace kSpider {
         cout << "kmer counting: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
 
         begin_time = clock();
-        clock_t begin_detailed_pairwise_comb, begin_detailed_pairwise_edges;
+        clock_t begin_detailed_pairwise_comb, begin_detailed_pairwise_edges, begin_detailed_pairwise_edges_insertion;
         float detailed_pairwise_comb = 0.0;
         float detailed_pairwise_edges = 0.0;
+        float detailed_pairwise_edges_insertion = 0.0;
 
         Combo combo = Combo();
         flat_hash_map<std::pair<uint32_t, uint32_t>, uint32_t, boost::hash<pair<uint32_t, uint32_t>>> edges;
@@ -124,8 +125,10 @@ namespace kSpider {
             for (auto const& seq_pair : combo.combs) {
                 uint32_t _seq1 = item.second[seq_pair.first];
                 uint32_t _seq2 = item.second[seq_pair.second];
+                begin_detailed_pairwise_edges_insertion = clock();
                 if (_seq1 > _seq2) edges[{_seq1, _seq2}] += colorsCount[item.first];
                 else edges[{_seq2, _seq1}] += colorsCount[item.first];
+                detailed_pairwise_edges_insertion += float(clock() - begin_detailed_pairwise_edges_insertion) / CLOCKS_PER_SEC;
             }
             detailed_pairwise_edges += float(clock() - begin_detailed_pairwise_edges) / CLOCKS_PER_SEC;
         }
@@ -133,6 +136,8 @@ namespace kSpider {
         cout << "pairwise: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
         cout << "  - comb: " << detailed_pairwise_comb << " secs" << endl;
         cout << "  - edges: " << detailed_pairwise_edges << " secs" << endl;
+        cout << "    - insertion: " << detailed_pairwise_edges_insertion << " secs" << endl;
+
 
 
 
