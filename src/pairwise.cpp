@@ -49,6 +49,14 @@ private:
 
 };
 
+
+template <typename T>
+void ascending(T& dFirst, T& dSecond)
+{
+    if (dFirst > dSecond)
+        std::swap(dFirst, dSecond);
+}
+
 namespace kSpider {
     void pairwise(string index_prefix) {
 
@@ -107,7 +115,7 @@ namespace kSpider {
             fstream_kmerCount << ++counter << '\t' << item.first << '\t' << item.second << '\n';
         }
         fstream_kmerCount.close();
-        cout << "kmer counting: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
+        cout << "kmer counting: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl; //time
 
         begin_time = clock();
         clock_t begin_detailed_pairwise_comb, begin_detailed_pairwise_edges, begin_detailed_pairwise_edges_insertion;
@@ -118,19 +126,19 @@ namespace kSpider {
         Combo combo = Combo();
         flat_hash_map<std::pair<uint32_t, uint32_t>, uint32_t, boost::hash<pair<uint32_t, uint32_t>>> edges;
         for (const auto& item : color_to_ids) {
-            begin_detailed_pairwise_comb = clock();
+            begin_detailed_pairwise_comb = clock(); //time
             combo.combinations(item.second.size());
-            detailed_pairwise_comb += float(clock() - begin_detailed_pairwise_comb) / CLOCKS_PER_SEC;
-            begin_detailed_pairwise_edges = clock();
+            detailed_pairwise_comb += float(clock() - begin_detailed_pairwise_comb) / CLOCKS_PER_SEC; //time
+            begin_detailed_pairwise_edges = clock(); //time
             for (auto const& seq_pair : combo.combs) {
                 uint32_t _seq1 = item.second[seq_pair.first];
                 uint32_t _seq2 = item.second[seq_pair.second];
-                begin_detailed_pairwise_edges_insertion = clock();
-                if (_seq1 > _seq2) edges[{_seq1, _seq2}] += colorsCount[item.first];
-                else edges[{_seq2, _seq1}] += colorsCount[item.first];
-                detailed_pairwise_edges_insertion += float(clock() - begin_detailed_pairwise_edges_insertion) / CLOCKS_PER_SEC;
+                begin_detailed_pairwise_edges_insertion = clock(); //time
+                ascending(_seq1, _seq2);
+                edges[{_seq1, _seq2}] += colorsCount[item.first];
+                detailed_pairwise_edges_insertion += float(clock() - begin_detailed_pairwise_edges_insertion) / CLOCKS_PER_SEC; //time
             }
-            detailed_pairwise_edges += float(clock() - begin_detailed_pairwise_edges) / CLOCKS_PER_SEC;
+            detailed_pairwise_edges += float(clock() - begin_detailed_pairwise_edges) / CLOCKS_PER_SEC; //time
         }
 
         cout << "pairwise: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
@@ -139,20 +147,12 @@ namespace kSpider {
         cout << "    - insertion: " << detailed_pairwise_edges_insertion << " secs" << endl;
 
 
-
-
         std::ofstream myfile;
-
         myfile.open(index_prefix + "_kSpider_pairwise.tsv");
-
         myfile << "ID" << '\t' << "seq1" << '\t' << "seq2" << '\t' << "shared_kmers" << '\n';
-
         uint64_t line_count = 0;
-
-        for (const auto& edge : edges) {
+        for (const auto& edge : edges)
             myfile << ++line_count << '\t' << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\n';
-        }
-
         myfile.close();
 
     }
