@@ -12,7 +12,7 @@ project (
 )
 
 set(default_build_type "Release")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++fs -fPIC -lgomp -lrt -fopenmp -pedantic -O3 -Ofast")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++fs -fPIC -lgomp -lrt -fopenmp -O3 -Ofast")
 # ----------------------------------------------------------------------------
 # kProcessor Setup
 # ----------------------------------------------------------------------------
@@ -42,6 +42,12 @@ set_target_properties(kSpider PROPERTIES POSITION_INDEPENDENT_CODE 1 CXX_STANDAR
 target_link_libraries (kSpider kProcessor z)
 target_link_libraries (kSpider kProcessor z zstr::zstr)
 target_include_directories(kSpider INTERFACE ${PHMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor)
+
+add_executable(export_ccount export_colors_count.cpp)
+target_link_libraries(export_ccount kSpider kProcessor z)
+
+add_executable(pairwise pairwise.cpp)
+target_link_libraries(pairwise kSpider kProcessor z)
 
 # add_executable(index_kframes apps/index_kframes.cpp)
 # target_link_libraries(index_kframes kSpider kProcessor z)
