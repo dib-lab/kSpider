@@ -21,6 +21,8 @@ using int_vec_map = parallel_flat_hash_map<uint32_t, vector<uint32_t>, std::hash
 
 typedef std::chrono::high_resolution_clock Time;
 
+int THREADS = 80;
+
 class Combo {
 
 public:
@@ -154,32 +156,35 @@ namespace kSpider {
         // convert map to vec for parallelization purposes.
         auto vec_color_to_ids = std::vector<std::pair<uint32_t, vector<uint32_t>>>(color_to_ids.begin(), color_to_ids.end());
 
-#pragma omp parallel num_threads(16) 
-        {
-#pragma omp parallel sections
-            {
-#pragma omp section
-                {
-                    for (int vec_i = 0; vec_i < vec_color_to_ids.size(); vec_i++) {
-                        auto item = vec_color_to_ids[vec_i];
-                        Combo combo = Combo();
-                        combo.combinations(item.second.size());
-                        for (uint32_t i = 0; i < combo.combs.size(); i++) {
-                            // for (auto const& seq_pair : combo.combs) {
-                            auto const& seq_pair = combo.combs[i];
-                            uint32_t _seq1 = item.second[seq_pair.first];
-                            uint32_t _seq2 = item.second[seq_pair.second];
-                            ascending(_seq1, _seq2);
+        int thread_num, num_threads, start, end, vec_i;
+        int n = vec_color_to_ids.size();
+        omp_set_num_threads(THREADS);
 
-                            auto _p = make_pair(_seq1, _seq2);
-                            uint32_t ccount = colorsCount[item.first];
-                            edges.lazy_emplace_l(_p,
-                                [ccount](Map::value_type& v) { v.second++; },           // called only when key was already present
-                                [_p, ccount](const Map::constructor& ctor) {
-                                    ctor(_p, ccount); }
-                            ); // construct value_type in place when key not present 
-                        }
-                    }
+#pragma omp parallel private(vec_i,thread_num,num_threads,start,end)
+        {
+            thread_num = omp_get_thread_num();
+            num_threads = omp_get_num_threads();
+            start = thread_num * n / num_threads;
+            end = (thread_num + 1) * n / num_threads;
+
+            for (vec_i = start; vec_i != end; ++vec_i) {
+                auto item = vec_color_to_ids[vec_i];
+                Combo combo = Combo();
+                combo.combinations(item.second.size());
+                for (uint32_t i = 0; i < combo.combs.size(); i++) {
+                    // for (auto const& seq_pair : combo.combs) {
+                    auto const& seq_pair = combo.combs[i];
+                    uint32_t _seq1 = item.second[seq_pair.first];
+                    uint32_t _seq2 = item.second[seq_pair.second];
+                    ascending(_seq1, _seq2);
+
+                    auto _p = make_pair(_seq1, _seq2);
+                    uint32_t ccount = colorsCount[item.first];
+                    edges.lazy_emplace_l(_p,
+                        [ccount](Map::value_type& v) { v.second++; },           // called only when key was already present
+                        [_p, ccount](const Map::constructor& ctor) {
+                            ctor(_p, ccount); }
+                    ); // construct value_type in place when key not present 
                 }
             }
         }
