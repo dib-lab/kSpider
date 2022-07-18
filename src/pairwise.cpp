@@ -8,6 +8,7 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/functional/hash.hpp>
 #include <ctime>
+#include<omp.h>
 
 using boost::adaptors::transformed;
 using boost::algorithm::join;
@@ -148,35 +149,39 @@ namespace kSpider {
         float detailed_pairwise_edges = 0.0;
         float detailed_pairwise_edges_insertion = 0.0;
 
-        Combo combo = Combo();
-
-
         Map edges;
 
+        // convert map to vec for parallelization purposes.
+        auto vec_color_to_ids = std::vector<std::pair<uint32_t, vector<uint32_t>>>(color_to_ids.begin(), color_to_ids.end());
 
-
-        for (const auto& item : color_to_ids) {
-            combo.combinations(item.second.size());
-#pragma omp parallel num_threads(16)
+#pragma omp parallel num_threads(16) 
+        {
+#pragma omp parallel sections
             {
-#pragma omp for
-                for (uint32_t i = 0; i < combo.combs.size(); i++) {
-                    // for (auto const& seq_pair : combo.combs) {
-                    auto const& seq_pair = combo.combs[i];
-                    uint32_t _seq1 = item.second[seq_pair.first];
-                    uint32_t _seq2 = item.second[seq_pair.second];
-                    ascending(_seq1, _seq2);
+#pragma omp section
+                {
+                    for (int vec_i = 0; vec_i < vec_color_to_ids.size(); vec_i++) {
+                        auto item = vec_color_to_ids[vec_i];
+                        Combo combo = Combo();
+                        combo.combinations(item.second.size());
+                        for (uint32_t i = 0; i < combo.combs.size(); i++) {
+                            // for (auto const& seq_pair : combo.combs) {
+                            auto const& seq_pair = combo.combs[i];
+                            uint32_t _seq1 = item.second[seq_pair.first];
+                            uint32_t _seq2 = item.second[seq_pair.second];
+                            ascending(_seq1, _seq2);
 
-                    auto _p = make_pair(_seq1, _seq2);
-                    uint32_t ccount = colorsCount[item.first];
-                    edges.lazy_emplace_l(_p,
-                        [ccount](Map::value_type& v) { v.second++; },           // called only when key was already present
-                        [_p, ccount](const Map::constructor& ctor) {
-                            ctor(_p, ccount); }
-                    ); // construct value_type in place when key not present 
+                            auto _p = make_pair(_seq1, _seq2);
+                            uint32_t ccount = colorsCount[item.first];
+                            edges.lazy_emplace_l(_p,
+                                [ccount](Map::value_type& v) { v.second++; },           // called only when key was already present
+                                [_p, ccount](const Map::constructor& ctor) {
+                                    ctor(_p, ccount); }
+                            ); // construct value_type in place when key not present 
+                        }
+                    }
                 }
             }
-
         }
 
         std::ofstream myfile;
