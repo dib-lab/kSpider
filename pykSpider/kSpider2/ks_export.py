@@ -40,9 +40,9 @@ def get_newick(node, parent_dist, leaf_names, newick='') -> str:
 
 @cli.command(name="export", help_priority=8)
 @click.option('-i', '--index-prefix', required=True, type=click.STRING, help="Index file prefix")
-@click.option('--dist-mat', "distance_matrix", is_flag=True, help="Convert pairwise matrix to nxn distance matrix", default=False)
+@click.option('--dist-mat', "distance_matrix", is_flag=True, help="Convert pairwise matrix to NxN distance matrix", default=False)
 @click.option('--newick', "newick", is_flag=True, help="Convert pairwise (containment) matrix to newick format", default=False)
-@click.option('--containment', "containment", is_flag=True, help="Use max %containment instead of number of kmers", default=False)
+@click.option('--containment', "containment", is_flag=True, help="Use max %containment instead of number of kmers", default=True)
 @click.pass_context
 def main(ctx, index_prefix, containment, newick, distance_matrix):
     """
@@ -127,7 +127,7 @@ def main(ctx, index_prefix, containment, newick, distance_matrix):
             if not distance_matrix:
                 df.to_csv(distmatrix_out, sep='\t')
             loaded_df = pd.read_csv(distmatrix_out, sep='\t')
-            os.remove(distmatrix_out)
+            # os.remove(distmatrix_out)
             ctx.obj.INFO(f"Writing newick to {newick_out}.")
             names = list(loaded_df.columns[1:])
             dist = loaded_df[loaded_df.columns[1:]].to_numpy()
