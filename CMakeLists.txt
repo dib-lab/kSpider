@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# kCluster project
+# kSpider project
 # ----------------------------------------------------------------------------
 
 # Minimum cmake version
@@ -43,11 +43,11 @@ target_link_libraries (kSpider kProcessor z)
 target_link_libraries (kSpider kProcessor z zstr::zstr)
 target_include_directories(kSpider INTERFACE ${PHMAP_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor)
 
-add_executable(export_ccount export_colors_count.cpp)
-target_link_libraries(export_ccount kSpider kProcessor z)
+# add_executable(export_ccount export_colors_count.cpp)
+# target_link_libraries(export_ccount kSpider kProcessor z)
 
-add_executable(pairwise pairwise.cpp)
-target_link_libraries(pairwise kSpider kProcessor z)
+# add_executable(pairwise pairwise.cpp)
+# target_link_libraries(pairwise kSpider kProcessor z)
 
 # add_executable(index_kframes apps/index_kframes.cpp)
 # target_link_libraries(index_kframes kSpider kProcessor z)
