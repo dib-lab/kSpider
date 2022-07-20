@@ -21,8 +21,6 @@ using int_vec_map = parallel_flat_hash_map<uint32_t, vector<uint32_t>, std::hash
 
 typedef std::chrono::high_resolution_clock Time;
 
-int THREADS = 64;
-
 class Combo {
 
 public:
@@ -70,7 +68,7 @@ inline void map_insert(int_int_map& _MAP, uint32_t& key, uint32_t& value) {
 
 
 namespace kSpider {
-    void pairwise(string index_prefix) {
+    void pairwise(string index_prefix, int user_threads) {
 
         // Read colors
         clock_t begin_time = clock();
@@ -158,10 +156,8 @@ namespace kSpider {
 
         int thread_num, num_threads, start, end, vec_i;
         int n = vec_color_to_ids.size();
-        cout << "n=" << n << endl;
-        cout << "THREADS=" << THREADS << endl;
 
-        omp_set_num_threads(THREADS);
+        omp_set_num_threads(user_threads);
 
 #pragma omp parallel private(vec_i,thread_num,num_threads,start,end)
         {
