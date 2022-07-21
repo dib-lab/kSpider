@@ -16,8 +16,8 @@ using namespace std;
 using namespace phmap;
 
 using Map = parallel_flat_hash_map<std::pair<uint32_t, uint32_t>, std::uint64_t, boost::hash<pair<uint32_t, uint32_t>>, std::equal_to<std::pair<uint32_t, uint32_t>>, std::allocator<std::pair<const std::pair<uint32_t, uint32_t>, uint32_t>>, 12, std::mutex>;
-using int_int_map = parallel_flat_hash_map<uint32_t, uint32_t, std::hash<uint32_t>, std::equal_to<uint32_t>, std::allocator<std::pair<const uint32_t, uint32_t>>, 12>;
-using int_vec_map = parallel_flat_hash_map<uint32_t, vector<uint32_t>, std::hash<uint32_t>, std::equal_to<uint32_t>, std::allocator<std::pair<const uint32_t, vector<uint32_t>>>, 1, std::mutex>;
+using int_int_map = parallel_flat_hash_map<uint32_t, uint32_t, std::hash<uint32_t>, std::equal_to<uint32_t>, std::allocator<std::pair<const uint32_t, uint32_t>>, 1>;
+using int_vec_map = parallel_flat_hash_map<uint32_t, vector<uint32_t>, std::hash<uint32_t>, std::equal_to<uint32_t>, std::allocator<std::pair<const uint32_t, vector<uint32_t>>>, 1>;
 
 typedef std::chrono::high_resolution_clock Time;
 
@@ -152,6 +152,7 @@ namespace kSpider {
         int n = vec_color_to_ids.size();
 
         omp_set_num_threads(user_threads);
+        begin_time = clock();
 
 #pragma omp parallel private(vec_i,thread_num,num_threads,start,end)
         {
@@ -181,6 +182,9 @@ namespace kSpider {
                 }
             }
         }
+
+        cout << "pairwise hashmap construction: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl; //time
+        cout << "writing pairwise matrix to" << index_prefix << "_kSpider_pairwise.tsv" << endl;
 
         std::ofstream myfile;
         myfile.open(index_prefix + "_kSpider_pairwise.tsv");
