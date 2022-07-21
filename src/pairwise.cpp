@@ -16,7 +16,7 @@ using namespace std;
 using namespace phmap;
 
 using Map = parallel_flat_hash_map<std::pair<uint32_t, uint32_t>, std::uint64_t, boost::hash<pair<uint32_t, uint32_t>>, std::equal_to<std::pair<uint32_t, uint32_t>>, std::allocator<std::pair<const std::pair<uint32_t, uint32_t>, uint32_t>>, 12, std::mutex>;
-using int_int_map = parallel_flat_hash_map<uint32_t, uint32_t, std::hash<uint32_t>, std::equal_to<uint32_t>, std::allocator<std::pair<const uint32_t, uint32_t>>, 1, std::mutex>;
+using int_int_map = parallel_flat_hash_map<uint32_t, uint32_t, std::hash<uint32_t>, std::equal_to<uint32_t>, std::allocator<std::pair<const uint32_t, uint32_t>>, 12>;
 using int_vec_map = parallel_flat_hash_map<uint32_t, vector<uint32_t>, std::hash<uint32_t>, std::equal_to<uint32_t>, std::allocator<std::pair<const uint32_t, vector<uint32_t>>>, 1, std::mutex>;
 
 typedef std::chrono::high_resolution_clock Time;
@@ -91,37 +91,31 @@ namespace kSpider {
         cout << "parsing colors: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
 
         begin_time = clock();
-        // flat_hash_map<uint32_t, uint32_t> colorsCount;
-        /* load the exported one better
+        int_int_map colorsCount;
         auto* kf = kDataFrame::load(index_prefix);
         auto it = kf->begin();
         while (it != kf->end()) {
-            uint32_t curr_color = it.getCount();
-            colorsCount.lazy_emplace_l(curr_color,
-                [](Map::value_type& v) { v.second++;},           // called only when key was already present
-                [curr_color](const Map::constructor& ctor) {
-                    ctor(curr_color, 1); }
-            ); // construct value_type in place when key not present
+            colorsCount[it.getCount()]++;
             it++;
         }
         // Free some memory
         delete kf;
-        */
+
+
         // TODO: should be csv, rename later.
-        int_int_map colorsCount;
-        std::ifstream data(index_prefix + "_kSpider_colorCount.tsv");
-        if (!data.is_open()) std::exit(EXIT_FAILURE);
-        std::string str;
-        std::getline(data, str); // skip the first line
-        while (std::getline(data, str))
-        {
-            std::istringstream iss(str);
-            std::string token;
-            vector<uint32_t> tmp;
-            while (std::getline(iss, token, ','))
-                tmp.push_back(stoi(token));
-            colorsCount.insert(make_pair(tmp[0], tmp[1]));
-        }
+        // std::ifstream data(index_prefix + "_kSpider_colorCount.tsv");
+        // if (!data.is_open()) std::exit(EXIT_FAILURE);
+        // std::string str;
+        // std::getline(data, str); // skip the first line
+        // while (std::getline(data, str))
+        // {
+        //     std::istringstream iss(str);
+        //     std::string token;
+        //     vector<uint32_t> tmp;
+        //     while (std::getline(iss, token, ','))
+        //         tmp.push_back(stoi(token));
+        //     colorsCount.insert(make_pair(tmp[0], tmp[1]));
+        // }
 
         cout << "parsing colors: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
         begin_time = clock();
