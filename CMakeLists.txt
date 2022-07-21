@@ -46,8 +46,8 @@ target_include_directories(kSpider INTERFACE ${PHMAP_INCLUDE_DIRS} ${PROJECT_SOU
 # add_executable(export_ccount export_colors_count.cpp)
 # target_link_libraries(export_ccount kSpider kProcessor z)
 
-# add_executable(pairwise pairwise.cpp)
-# target_link_libraries(pairwise kSpider kProcessor z)
+add_executable(pairwise pairwise.cpp)
+target_link_libraries(pairwise kSpider kProcessor z)
 
 # add_executable(index_kframes apps/index_kframes.cpp)
 # target_link_libraries(index_kframes kSpider kProcessor z)
