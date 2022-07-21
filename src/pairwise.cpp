@@ -88,7 +88,7 @@ namespace kSpider {
             }
         }
 
-        cout << "parsing colors: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
+        cout << "mapping colors to groups: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
 
         begin_time = clock();
         int_int_map colorsCount;
@@ -117,7 +117,7 @@ namespace kSpider {
         //     colorsCount.insert(make_pair(tmp[0], tmp[1]));
         // }
 
-        cout << "parsing colors: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
+        cout << "parsing index colors: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
         begin_time = clock();
         flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
         for (const auto& record : color_to_ids) {
