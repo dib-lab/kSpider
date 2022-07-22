@@ -39,10 +39,9 @@ with open(namesmap_file) as NAMES:
 
 # 2 kmer counting
 print("[i] counting kmers")
-num_lines = sum(1 for line in open(kmer_count_file)) - 1
 with open(kmer_count_file) as KCOUNT_FILE:
     next(KCOUNT_FILE)
-    for line in tqdm(KCOUNT_FILE, total=num_lines):
+    for line in tqdm(KCOUNT_FILE, total=122635):
         line = line.strip().split()
         seq_id = int(line[1])
         number_of_kmers = int(line[2])
@@ -56,14 +55,14 @@ batch_size = 10000000
 batch_counter = 0
 edges_tuples = []
 
-print(f"counting number of pairwise comparisons {pairwise_file}")
-num_lines = sum(1 for line in open(pairwise_file)) - 1
+# print(f"counting number of pairwise comparisons {pairwise_file}")
+# num_lines = sum(1 for line in open(pairwise_file)) - 1
 
 print("[i] constructing graph")
 with open(pairwise_file, 'r') as pairwise_tsv:
     next(pairwise_tsv)  # skip header
 
-    for row in tqdm(pairwise_tsv, total=num_lines):
+    for row in tqdm(pairwise_tsv, total=3352079582):
         row = row.strip().split()
         seq1 = int(row[1])
         seq2 = int(row[2])
@@ -87,14 +86,18 @@ with open(pairwise_file, 'r') as pairwise_tsv:
         if len(edges_tuples):
             graph.add_edges_from(edges_tuples)
 
-
-no_connected_components = rx.number_connected_components(graph)
-print(f"connected components: {no_connected_components}")
-
+print("calculating number of clusters")
 
 connected_components = rx.connected_components(graph)
-
+print(f"connected components: {len(connected_components)}")
+print("printing results")
+single_components = 0
 with open(index_prefix + f"retworkx_{CONTAINMENT_THRESHOLD}.txt", 'w') as CLUSTERS:
     for component in connected_components:
+        if len(component) == 1:
+            single_components += 1
+            continue
         named_component = [id_to_name[node + 1] for node in component]
         CLUSTERS.write(','.join(named_component) + '\n')
+
+print(f"skipped clusters with single node: {single_components}")
