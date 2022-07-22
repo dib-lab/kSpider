@@ -1,15 +1,12 @@
-from matplotlib.pyplot import connect
 import retworkx as rx
 from tqdm import tqdm
-from itertools import combinations as comb
-from collections import defaultdict
+import sys
 
+if len(sys.argv) != 3:
+    sys.exit("run: python rx_clustering.py <index_prefix> <clustering_threshold%>")
 
-# namesmap_file = "/home/mabuelanin/dib-dev/nasa/kSpider_optimize/work_dir/subset_sigs_100k.namesMap"
-# intvectors_file = "/home/mabuelanin/dib-dev/nasa/kSpider_optimize/work_dir/subset_sigs_100kcolors.intvectors"
-# colors_count_file = "/home/mabuelanin/dib-dev/nasa/kSpider_optimize/work_dir/subset_sigs_100k_kSpider_colorCount.tsv"
-index_prefix = "/home/mabuelanin/dib-dev/nasa/kSpider_master/work_dir/subset_sigs_100k"
-# index_prefix = "/home/mabuelanin/dib-dev/nasa/kSpider_optimize/data/sigs_100k"
+index_prefix = sys.argv[1]
+CONTAINMENT_THRESHOLD = sys.argv[2]
 
 namesmap_file = index_prefix + ".namesMap"
 intvectors_file = index_prefix + "colors.intvectors"
