@@ -133,7 +133,6 @@ int main(int argc, char** argv) {
             string& sig_name = sig_names[j];
             zstr::ifstream sig_stream(sig_path);
             JSON sig(sig_stream);
-            cout << "\r" << "loading " << j + 1 << "/" << sigs_count;
             phmap::flat_hash_set<uint64_t> tmp_hashes;
             int number_of_sub_sigs = sig[0]["signatures"].size();
             for (int i = 0; i < number_of_sub_sigs; i++) {
