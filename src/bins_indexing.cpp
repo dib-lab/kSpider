@@ -99,13 +99,6 @@ namespace kSpider {
                 continue;
             }
 
-            // Loading bin, insert into namesmap if it contains hashes.
-            phmap::flat_hash_set<uint64_t> table_in;
-            phmap::BinaryInputArchive ar_in(file_name.c_str());
-            table_in.phmap_load(ar_in);
-            if (!table_in.size()) continue;
-
-            bin_to_hashes.insert(pair(bin_basename, table_in));
             basename_to_path.insert(pair(bin_basename, file_name));
 
             total_bins_number++;
@@ -150,7 +143,7 @@ namespace kSpider {
         int processed_bins_count = 0;
 
         // START
-        for (const auto& [bin_basename, bin_hashes] : bin_to_hashes) {
+        for (const auto& [bin_basename, bin_path] : basename_to_path) {
             //START
 
             cout << "Processing " << ++processed_bins_count << "/" << total_bins_number << " | " << bin_basename << " ... " << endl;
@@ -166,6 +159,10 @@ namespace kSpider {
             convertMap.clear();
             convertMap.insert(make_pair(0, readTag));
             convertMap.insert(make_pair(readTag, readTag));
+
+            phmap::flat_hash_set<uint64_t> bin_hashes;
+            phmap::BinaryInputArchive ar_in(bin_path.c_str());
+            bin_hashes.phmap_load(ar_in);
 
             for (const uint64_t& hashed_kmer : bin_hashes) {
                 uint64_t currentTag = frame->getCount(hashed_kmer);
