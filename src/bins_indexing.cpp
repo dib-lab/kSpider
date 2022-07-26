@@ -11,46 +11,19 @@
 #include <stdexcept>
 #include <sstream>
 #include <string>
-#include "RSJparser.tcc"
 #include <fstream>
+#include "parallel_hashmap/phmap_dump.h"
 
-using JSON = RSJresource;
 
-// thanks to http://jsteemann.github.io/blog/2016/06/02/fastest-string-to-uint64-conversion-method/
-inline uint64_t unrolled(std::string const& value) {
-    uint64_t result = 0;
 
-    size_t const length = value.size();
-    switch (length) {
-    case 20:    result += (value[length - 20] - '0') * 10000000000000000000ULL;
-    case 19:    result += (value[length - 19] - '0') * 1000000000000000000ULL;
-    case 18:    result += (value[length - 18] - '0') * 100000000000000000ULL;
-    case 17:    result += (value[length - 17] - '0') * 10000000000000000ULL;
-    case 16:    result += (value[length - 16] - '0') * 1000000000000000ULL;
-    case 15:    result += (value[length - 15] - '0') * 100000000000000ULL;
-    case 14:    result += (value[length - 14] - '0') * 10000000000000ULL;
-    case 13:    result += (value[length - 13] - '0') * 1000000000000ULL;
-    case 12:    result += (value[length - 12] - '0') * 100000000000ULL;
-    case 11:    result += (value[length - 11] - '0') * 10000000000ULL;
-    case 10:    result += (value[length - 10] - '0') * 1000000000ULL;
-    case  9:    result += (value[length - 9] - '0') * 100000000ULL;
-    case  8:    result += (value[length - 8] - '0') * 10000000ULL;
-    case  7:    result += (value[length - 7] - '0') * 1000000ULL;
-    case  6:    result += (value[length - 6] - '0') * 100000ULL;
-    case  5:    result += (value[length - 5] - '0') * 10000ULL;
-    case  4:    result += (value[length - 4] - '0') * 1000ULL;
-    case  3:    result += (value[length - 3] - '0') * 100ULL;
-    case  2:    result += (value[length - 2] - '0') * 10ULL;
-    case  1:    result += (value[length - 1] - '0');
-    }
-    return result;
-}
+using BINS_MAP = phmap::parallel_flat_hash_map<std::string, phmap::flat_hash_set<uint64_t>,
+    phmap::priv::hash_default_hash<std::string>,
+    phmap::priv::hash_default_eq<std::string>,
+    std::allocator<std::pair<const std::string, phmap::flat_hash_set<uint64_t>>>,
+    12,
+    std::mutex
+>;
 
-template<>
-uint64_t RSJresource::as<uint64_t>(const uint64_t& def) {
-    if (!exists()) return (0); // required
-    return (unrolled(data)); // example
-}
 
 // thanks to https://stackoverflow.com/a/8615450/3371177
 inline std::vector<std::string> glob2(const std::string& pattern) {
@@ -84,13 +57,15 @@ inline std::vector<std::string> glob2(const std::string& pattern) {
 
 namespace kSpider {
 
-    void bins_indexing_in_memory(string sigs_dir, int selective_kSize) {
+    void bins_indexing_in_memory(string bins_dir, int selective_kSize) {
+
+        BINS_MAP bin_to_hashes;
 
         kDataFrame* frame;
-        std::string dir_prefix = sigs_dir.substr(sigs_dir.find_last_of("/\\") + 1);
+        std::string dir_prefix = bins_dir.substr(bins_dir.find_last_of("/\\") + 1);
 
         flat_hash_map<string, string> namesMap;
-        string names_fileName = sigs_dir;
+        string names_fileName = bins_dir;
 
         flat_hash_map<string, uint64_t> tagsMap;
         flat_hash_map<string, uint64_t> groupNameMap;
@@ -103,27 +78,40 @@ namespace kSpider {
         flat_hash_map<string, uint64_t> groupCounter;
         int detected_kSize = 0;
 
-        int total_sigs_number = 0;
+        int total_bins_number = 0;
         frame = new kDataFramePHMAP(selective_kSize, mumur_hasher);
 
-        for (const auto& dirEntry : glob2(sigs_dir + "/*")) {
+        flat_hash_map<string, string> basename_to_path;
+
+        for (const auto& dirEntry : glob2(bins_dir + "/*")) {
             string file_name = (string)dirEntry;
             size_t lastindex = file_name.find_last_of(".");
-            string sig_prefix = file_name.substr(0, lastindex);
-            std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
+            string bin_prefix = file_name.substr(0, lastindex);
+            std::string bin_basename = bin_prefix.substr(bin_prefix.find_last_of("/\\") + 1);
 
 
             std::string::size_type idx;
             idx = file_name.rfind('.');
             std::string extension = "";
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
-            if (extension != "sig" && extension != "gz") continue;
+            if (extension != "bin") {
+                cerr << "skipping " << file_name << " does not have extension .bin" << endl;
+                continue;
+            }
 
-            total_sigs_number++;
+            // Loading bin, insert into namesmap if it contains hashes.
+            phmap::flat_hash_set<uint64_t> table_in;
+            phmap::BinaryInputArchive ar_in(file_name.c_str());
+            table_in.phmap_load(ar_in);
+            if (!table_in.size()) continue;
 
-            // Here we can decide
-            seqName = sig_basename;
-            groupName = sig_basename;
+            bin_to_hashes.insert(pair(bin_basename, table_in));
+            basename_to_path.insert(pair(bin_basename, file_name));
+
+            total_bins_number++;
+
+            seqName = bin_basename;
+            groupName = bin_basename;
 
             namesMap.insert(make_pair(seqName, groupName));
             auto it = groupNameMap.find(groupName);
@@ -159,137 +147,105 @@ namespace kSpider {
         uint64_t lastTag = 0;
         readID = 0;
 
-        int processed_sigs_count = 0;
+        int processed_bins_count = 0;
 
         // START
-        for (const auto& dirEntry : glob2(sigs_dir + "/*")) {
-            string file_name = (string)dirEntry;
-            size_t lastindex = file_name.find_last_of(".");
-            string sig_prefix = file_name.substr(0, lastindex);
-
-            std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
-
-            std::string::size_type idx;
-            idx = file_name.rfind('.');
-            std::string extension = "";
-            if (idx != std::string::npos) extension = file_name.substr(idx + 1);
-            if (extension != "sig") continue;
-
-            std::ifstream sig_stream(file_name);
-            JSON sig(sig_stream);
-            int number_of_sub_sigs = sig[0]["signatures"].size();
-            string general_name = sig[0]["name"].as<std::string>();
-            if (general_name == "") {
-                std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
-                general_name = sig_basename;
-            }
-
-
+        for (const auto& [bin_basename, bin_hashes] : bin_to_hashes) {
             //START
-            for (int i = 0; i < number_of_sub_sigs; i++) {
-                int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
-                if (current_kSize != selective_kSize) continue;
 
-                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << general_name << " k:" << selective_kSize << " ... " << endl;
-                string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
-                string sig_name = md5sum + ":" + general_name;
+            cout << "Processing " << ++processed_bins_count << "/" << total_bins_number << " | " << bin_basename << " ... " << endl;
 
-                flat_hash_map<uint64_t, uint64_t> convertMap;
+            flat_hash_map<uint64_t, uint64_t> convertMap;
 
-                string readName = sig_name;
-                string groupName = general_name;
+            string readName = bin_basename;
+            string groupName = bin_basename;
 
-                uint64_t readTag = groupNameMap.find(groupName)->second;
+            uint64_t readTag = groupNameMap.find(groupName)->second;
 
 
-                convertMap.clear();
-                convertMap.insert(make_pair(0, readTag));
-                convertMap.insert(make_pair(readTag, readTag));
+            convertMap.clear();
+            convertMap.insert(make_pair(0, readTag));
+            convertMap.insert(make_pair(readTag, readTag));
 
-
-                auto loaded_sig_it = sig[0]["signatures"][i]["mins"].as_array().begin();
-                while (loaded_sig_it != sig[0]["signatures"][i]["mins"].as_array().end()) {
-                    uint64_t hashed_kmer = loaded_sig_it->as<uint64_t>();
-                    uint64_t currentTag = frame->getCount(hashed_kmer);
-                    auto itc = convertMap.find(currentTag);
-                    if (itc == convertMap.end()) {
-                        vector<uint32_t> colors = legend->find(currentTag)->second;
-                        auto tmpiT = find(colors.begin(), colors.end(), readTag);
-                        if (tmpiT == colors.end()) {
-                            colors.push_back(readTag);
-                            sort(colors.begin(), colors.end());
-                        }
-
-                        string colorsString = to_string(colors[0]);
-                        for (int k = 1; k < colors.size(); k++) {
-                            colorsString += ";" + to_string(colors[k]);
-                        }
-
-                        auto itTag = tagsMap.find(colorsString);
-                        if (itTag == tagsMap.end()) {
-                            uint64_t newColor;
-                            if (freeColors.size() == 0) {
-                                newColor = groupID++;
-                            }
-                            else {
-                                newColor = freeColors.top();
-                                freeColors.pop();
-                            }
-
-                            tagsMap.insert(make_pair(colorsString, newColor));
-                            legend->insert(make_pair(newColor, colors));
-                            itTag = tagsMap.find(colorsString);
-                            colorsCount[newColor] = 0;
-                        }
-                        uint64_t newColor = itTag->second;
-
-                        convertMap.insert(make_pair(currentTag, newColor));
-                        itc = convertMap.find(currentTag);
+            for (const uint64_t& hashed_kmer : bin_hashes) {
+                uint64_t currentTag = frame->getCount(hashed_kmer);
+                auto itc = convertMap.find(currentTag);
+                if (itc == convertMap.end()) {
+                    vector<uint32_t> colors = legend->find(currentTag)->second;
+                    auto tmpiT = find(colors.begin(), colors.end(), readTag);
+                    if (tmpiT == colors.end()) {
+                        colors.push_back(readTag);
+                        sort(colors.begin(), colors.end());
                     }
 
-                    if (itc->second != currentTag) {
+                    string colorsString = to_string(colors[0]);
+                    for (int k = 1; k < colors.size(); k++) {
+                        colorsString += ";" + to_string(colors[k]);
+                    }
 
-                        colorsCount[currentTag]--;
-                        if (colorsCount[currentTag] == 0 && currentTag != 0) {
-
-                            auto _invGroupNameIT = inv_groupNameMap.find(currentTag);
-                            if (_invGroupNameIT == inv_groupNameMap.end()) {
-                                freeColors.push(currentTag);
-                                vector<uint32_t> colors = legend->find(currentTag)->second;
-                                string colorsString = to_string(colors[0]);
-                                for (unsigned int k = 1; k < colors.size(); k++) {
-                                    colorsString += ";" + to_string(colors[k]);
-                                }
-                                tagsMap.erase(colorsString);
-                                legend->erase(currentTag);
-                                if (convertMap.find(currentTag) != convertMap.end())
-                                    convertMap.erase(currentTag);
-                            }
-
+                    auto itTag = tagsMap.find(colorsString);
+                    if (itTag == tagsMap.end()) {
+                        uint64_t newColor;
+                        if (freeColors.size() == 0) {
+                            newColor = groupID++;
                         }
-                        colorsCount[itc->second]++;
-                    }
+                        else {
+                            newColor = freeColors.top();
+                            freeColors.pop();
+                        }
 
-                    frame->setCount(hashed_kmer, itc->second);
-                    if (frame->getCount(hashed_kmer) != itc->second) {
-                        //frame->setC(kmer,itc->second);
-                        cout << "Error Founded " << hashed_kmer << " from sequence " << readName << " expected "
-                            << itc->second << " found " << frame->getCount(hashed_kmer) << endl;
-                        exit(1);
+                        tagsMap.insert(make_pair(colorsString, newColor));
+                        legend->insert(make_pair(newColor, colors));
+                        itTag = tagsMap.find(colorsString);
+                        colorsCount[newColor] = 0;
                     }
-                    loaded_sig_it++;
+                    uint64_t newColor = itTag->second;
+
+                    convertMap.insert(make_pair(currentTag, newColor));
+                    itc = convertMap.find(currentTag);
                 }
-                readID += 1;
-                groupCounter[groupName]--;
-                if (colorsCount[readTag] == 0) {
-                    if (groupCounter[groupName] == 0) {
-                        freeColors.push(readTag);
-                        legend->erase(readTag);
-                    }
 
+                if (itc->second != currentTag) {
+
+                    colorsCount[currentTag]--;
+                    if (colorsCount[currentTag] == 0 && currentTag != 0) {
+
+                        auto _invGroupNameIT = inv_groupNameMap.find(currentTag);
+                        if (_invGroupNameIT == inv_groupNameMap.end()) {
+                            freeColors.push(currentTag);
+                            vector<uint32_t> colors = legend->find(currentTag)->second;
+                            string colorsString = to_string(colors[0]);
+                            for (int k = 1; k < colors.size(); k++) {
+                                colorsString += ";" + to_string(colors[k]);
+                            }
+                            tagsMap.erase(colorsString);
+                            legend->erase(currentTag);
+                            if (convertMap.find(currentTag) != convertMap.end())
+                                convertMap.erase(currentTag);
+                        }
+
+                    }
+                    colorsCount[itc->second]++;
                 }
-                cout << "   saved_kmers(~" << frame->size() << ")." << endl << endl;
+
+                frame->setCount(hashed_kmer, itc->second);
+                if (frame->getCount(hashed_kmer) != itc->second) {
+                    //frame->setC(kmer,itc->second);
+                    cout << "Error Founded " << hashed_kmer << " from sequence " << readName << " expected "
+                        << itc->second << " found " << frame->getCount(hashed_kmer) << endl;
+                    exit(1);
+                }
             }
+            readID += 1;
+            groupCounter[groupName]--;
+            if (colorsCount[readTag] == 0) {
+                if (groupCounter[groupName] == 0) {
+                    freeColors.push(readTag);
+                    legend->erase(readTag);
+                }
+
+            }
+            cout << "   saved_kmers(~" << frame->size() << ")." << endl << endl;
             // END
 
         }
