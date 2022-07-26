@@ -71,7 +71,7 @@ namespace kSpider {
     void pairwise(string index_prefix, int user_threads) {
 
         // Read colors
-        clock_t begin_time = clock();
+        auto begin_time = Time::now();
         string colors_map = index_prefix + "colors.intvectors";
         ifstream input(colors_map.c_str());
         int size;
@@ -88,9 +88,9 @@ namespace kSpider {
             }
         }
 
-        cout << "mapping colors to groups: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
+        cout << "mapping colors to groups: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
 
-        begin_time = clock();
+        begin_time = Time::now();
         int_int_map colorsCount;
         auto* kf = kDataFrame::load(index_prefix);
         auto it = kf->begin();
@@ -117,8 +117,8 @@ namespace kSpider {
         //     colorsCount.insert(make_pair(tmp[0], tmp[1]));
         // }
 
-        cout << "parsing index colors: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl;
-        begin_time = clock();
+        cout << "parsing index colors: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
+        begin_time = Time::now();
         flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
         for (const auto& record : color_to_ids) {
             uint32_t colorCount = colorsCount[record.first];
@@ -135,9 +135,9 @@ namespace kSpider {
             fstream_kmerCount << ++counter << '\t' << item.first << '\t' << item.second << '\n';
         }
         fstream_kmerCount.close();
-        cout << "kmer counting: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl; //time
+        cout << "kmer counting: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
 
-        begin_time = clock();
+        begin_time = Time::now();
         clock_t begin_detailed_pairwise_comb, begin_detailed_pairwise_edges, begin_detailed_pairwise_edges_insertion;
         float detailed_pairwise_comb = 0.0;
         float detailed_pairwise_edges = 0.0;
@@ -152,7 +152,7 @@ namespace kSpider {
         int n = vec_color_to_ids.size();
 
         omp_set_num_threads(user_threads);
-        begin_time = clock();
+        begin_time = Time::now();
 
 #pragma omp parallel private(vec_i,thread_num,num_threads,start,end)
         {
@@ -183,15 +183,17 @@ namespace kSpider {
             }
         }
 
-        cout << "pairwise hashmap construction: " << float(clock() - begin_time) / CLOCKS_PER_SEC << " secs" << endl; //time
-        cout << "writing pairwise matrix to" << index_prefix << "_kSpider_pairwise.tsv" << endl;
+        cout << "pairwise hashmap construction: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
+        cout << "writing pairwise matrix to " << index_prefix << "_kSpider_pairwise.tsv" << endl;
 
         std::ofstream myfile;
         myfile.open(index_prefix + "_kSpider_pairwise.tsv");
-        myfile << "ID" << '\t' << "seq1" << '\t' << "seq2" << '\t' << "shared_kmers" << '\n';
+        myfile << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\n';
         uint64_t line_count = 0;
-        for (const auto& edge : edges)
-            myfile << ++line_count << '\t' << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\n';
+        for (const auto& edge : edges) {
+            float max_containment = (float)edge.second / min(groupID_to_kmerCount[edge.first.first], groupID_to_kmerCount[edge.first.second]);
+            myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\n';
+        }
         myfile.close();
 
     }
