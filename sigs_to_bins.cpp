@@ -82,15 +82,14 @@ std::vector<std::string> glob2(const std::string& pattern) {
 
 int main(int argc, char** argv) {
 
-    if (argc != 6) {
-        cout << "run: ./pairwise <sigs_directory> <kSize> <output_dir> <threads> <chunks>" << endl;
+    if (argc != 5) {
+        cout << "run: ./pairwise <sigs_directory> <kSize> <output_dir> <threads>" << endl;
         exit(1);
     }
     string sigs_dir = argv[1];
     int kSize = stoi(argv[2]);
     string output_dir = argv[3];
     int user_threads = stoi(argv[4]);
-    int user_chunks = stoi(argv[5]);
 
     string cmd = "mkdir -p " + output_dir;
 
@@ -123,30 +122,18 @@ int main(int argc, char** argv) {
         total_sigs_number++;
     }
 
-
-    vector<tuple<string, string>> json_map;
-    int chunk = user_chunks;
-    if (user_chunks > sig_names.size()) {
-        cout << "chunk size set to " << sig_names.size();
-        chunk = sig_names.size();
-    }
-    cout << "chunk size: " << chunk << endl;
-    int chunk_count = 0;
-    int done_chunks = 0;
-    cout << "load without parsing" << endl;
+    int sigs_count = sigs_paths.size();
     auto begin_time = Time::now();
 
 #pragma omp parallel num_threads(user_threads)
     {
 #pragma omp for
         for (int j = 0; j < sigs_paths.size(); j++) {
-            cout << "\r" << "loading " << chunk_count + 1 << "/" << chunk;
             string& sig_path = sigs_paths[j];
             string& sig_name = sig_names[j];
             zstr::ifstream sig_stream(sig_path);
             JSON sig(sig_stream);
-            json_map.push_back(make_tuple(sig_names[j], sigs_paths[j]));
-            chunk_count++;
+            cout << "\r" << "loading " << j + 1 << "/" << sigs_count;
             phmap::flat_hash_set<uint64_t> tmp_hashes;
             int number_of_sub_sigs = sig[0]["signatures"].size();
             for (int i = 0; i < number_of_sub_sigs; i++) {
@@ -164,30 +151,6 @@ int main(int argc, char** argv) {
             phmap::BinaryOutputArchive ar_out(out_path.c_str());
             tmp_hashes.phmap_dump(ar_out);
 
-        }
-    }
-
-    if (chunk_count) {
-        for (auto& _pair : json_map) {
-            auto& sig_name = get<0>(_pair);
-            zstr::ifstream sig_stream(get<1>(_pair));
-            JSON sig(sig_stream);
-            phmap::flat_hash_set<uint64_t> tmp_hashes;
-            int number_of_sub_sigs = sig[0]["signatures"].size();
-            for (int i = 0; i < number_of_sub_sigs; i++) {
-                int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
-                auto loaded_sig_it = sig[0]["signatures"][i]["mins"].as_array().begin();
-                if (current_kSize == kSize) {
-                    while (loaded_sig_it != sig[0]["signatures"][i]["mins"].as_array().end()) {
-                        tmp_hashes.insert(loaded_sig_it->as<uint64_t>());
-                        loaded_sig_it++;
-                    }
-                    break;
-                }
-            }
-            string out_path = output_dir + "/" + sig_name + ".bin";
-            phmap::BinaryOutputArchive ar_out(out_path.c_str());
-            tmp_hashes.phmap_dump(ar_out);
         }
     }
 
