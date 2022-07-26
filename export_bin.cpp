@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     phmap::flat_hash_set<uint64_t> table_in;
     phmap::BinaryInputArchive ar_in(bin_path.c_str());
     table_in.phmap_load(ar_in);
-    cout << "loaded bin size: " << table_in.size() << endl;
+    cerr << "loaded bin size: " << table_in.size() << endl;
 
     for(const uint64_t & hash : table_in) cout << hash << endl;
 
