@@ -124,9 +124,9 @@ int main(int argc, char** argv) {
     }
 
 
-    vector<tuple<string, JSON>> json_map;
-    int chunk =  user_chunks;
-    if (user_chunks > sig_names.size()){
+    vector<tuple<string, string>> json_map;
+    int chunk = user_chunks;
+    if (user_chunks > sig_names.size()) {
         cout << "chunk size set to " << sig_names.size();
         chunk = sig_names.size();
     }
@@ -141,8 +141,7 @@ int main(int argc, char** argv) {
         cout << "\r" << "loading " << chunk_count + 1 << "/" << chunk;
         string& sig_path = sigs_paths[j];
         zstr::ifstream sig_stream(sig_path);
-        JSON sig(sig_stream);
-        json_map.push_back(make_tuple(sig_names[j], sig));
+        json_map.push_back(make_tuple(sig_names[j], sigs_paths[j]));
         chunk_count++;
 
         if (chunk_count < chunk) continue;
@@ -153,7 +152,8 @@ int main(int argc, char** argv) {
             for (int m = 0; m < chunk; m++) {
                 auto& _pair = json_map[m];
                 auto& sig_name = get<0>(_pair);
-                JSON& sig = get<1>(_pair);
+                zstr::ifstream sig_stream(get<1>(_pair));
+                JSON sig(sig_stream);
                 phmap::flat_hash_set<uint64_t> tmp_hashes;
                 int number_of_sub_sigs = sig[0]["signatures"].size();
                 for (int i = 0; i < number_of_sub_sigs; i++) {
@@ -180,7 +180,8 @@ int main(int argc, char** argv) {
     if (chunk_count) {
         for (auto& _pair : json_map) {
             auto& sig_name = get<0>(_pair);
-            JSON& sig = get<1>(_pair);
+            zstr::ifstream sig_stream(get<1>(_pair));
+            JSON sig(sig_stream);
             phmap::flat_hash_set<uint64_t> tmp_hashes;
             int number_of_sub_sigs = sig[0]["signatures"].size();
             for (int i = 0; i < number_of_sub_sigs; i++) {
