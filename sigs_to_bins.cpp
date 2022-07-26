@@ -10,12 +10,20 @@
 #include <stdexcept>
 #include "parallel_hashmap/phmap_dump.h"
 #include <cstdlib>
+#include <sys/stat.h>
+#include <unistd.h>
 
 using namespace std;
 // using namespace phmap;
 using JSON = RSJresource;
 
 typedef std::chrono::high_resolution_clock Time;
+
+inline bool file_exists(const std::string& name) {
+    struct stat buffer;
+    return (stat(name.c_str(), &buffer) == 0);
+}
+
 
 inline uint64_t unrolled(std::string const& value) {
     uint64_t result = 0;
@@ -105,6 +113,8 @@ int main(int argc, char** argv) {
     vector<string> sigs_paths;
     vector<string> sig_names;
 
+    int skipped_files = 0;
+
     int total_sigs_number = 0;
     for (const auto& dirEntry : glob2(sigs_dir + "/*")) {
         string file_name = (string)dirEntry;
@@ -117,10 +127,15 @@ int main(int argc, char** argv) {
         if (idx != std::string::npos) extension = file_name.substr(idx + 1);
         if (extension != "sig" && extension != "gz") continue;
 
+        if (file_exists(output_dir + "/" + sig_basename + ".bin")) {skipped_files++; continue;}
+
         sig_names.push_back(sig_basename);
         sigs_paths.push_back(file_name);
+        
         total_sigs_number++;
     }
+
+    cout << "Skipped "<< skipped_files <<" files as they already converted to bins." << endl;
 
     int sigs_count = sigs_paths.size();
     auto begin_time = Time::now();
@@ -154,6 +169,6 @@ int main(int argc, char** argv) {
     }
 
     cout << endl;
-    cout << "Loaded all signatures in " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
+    cout << "Process completed in " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
 
 }
