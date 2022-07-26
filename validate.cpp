@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
     string bin_path = argv[3];
 
     auto begin_time = Time::now();
-    std::ifstream sig_stream(sig_path);
+    zstr::ifstream sig_stream(sig_path);
     JSON sig(sig_stream);
     phmap::flat_hash_set<uint64_t> tmp_hashes;
     int number_of_sub_sigs = sig[0]["signatures"].size();
