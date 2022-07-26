@@ -64,6 +64,10 @@ target_link_libraries(dump_sig kSpider kProcessor z)
 add_executable(sigs_to_bins sigs_to_bins.cpp)
 target_link_libraries(sigs_to_bins kSpider kProcessor z)
 
+add_executable(sig_to_bin sig_to_bin.cpp)
+target_link_libraries(sig_to_bin kSpider kProcessor z)
+
+
 # add_executable(index_kframes apps/index_kframes.cpp)
 # target_link_libraries(index_kframes kSpider kProcessor z)
 
