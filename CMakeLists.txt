@@ -55,6 +55,11 @@ target_link_libraries(index_bins kSpider kProcessor z)
 add_executable(validate validate.cpp)
 target_link_libraries(validate kSpider kProcessor z)
 
+add_executable(dump_bin export_bin.cpp)
+target_link_libraries(dump_bin kSpider kProcessor z)
+
+add_executable(dump_sig export_sig.cpp)
+target_link_libraries(dump_sig kSpider kProcessor z)
 
 # add_executable(index_kframes apps/index_kframes.cpp)
 # target_link_libraries(index_kframes kSpider kProcessor z)
