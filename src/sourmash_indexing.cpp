@@ -175,7 +175,7 @@ namespace kSpider {
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
             if (extension != "sig") continue;
 
-            std::ifstream sig_stream(file_name);
+            zstr::ifstream sig_stream(file_name);
             JSON sig(sig_stream);
             int number_of_sub_sigs = sig[0]["signatures"].size();
             string general_name = sig[0]["name"].as<std::string>();

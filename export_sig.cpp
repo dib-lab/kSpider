@@ -55,15 +55,15 @@ uint64_t RSJresource::as<uint64_t>(const uint64_t& def) {
 int main(int argc, char** argv) {
 
     if (argc != 3) {
-        cout << "run: ./validate <sig> <kSize>" << endl;
+        cout << "run: ./dump_sig <sig> <kSize>" << endl;
         exit(1);
     }
-    
+
     string sig_path = argv[1];
     int kSize = stoi(argv[2]);
 
     auto begin_time = Time::now();
-    std::ifstream sig_stream(sig_path);
+    zstr::ifstream sig_stream(sig_path);
     JSON sig(sig_stream);
     phmap::flat_hash_set<uint64_t> tmp_hashes;
     int number_of_sub_sigs = sig[0]["signatures"].size();
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
     }
 
 
-    for(const uint64_t & hash : tmp_hashes) cout << hash << endl;
+    for (const uint64_t& hash : tmp_hashes) cout << hash << endl;
 
 
 }
