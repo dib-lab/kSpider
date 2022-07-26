@@ -69,7 +69,15 @@ namespace kSpider {
 
         flat_hash_map<string, uint64_t> tagsMap;
         flat_hash_map<string, uint64_t> groupNameMap;
-        auto* legend = new flat_hash_map<uint64_t, std::vector<uint32_t>>();
+
+        auto* legend = new phmap::parallel_flat_hash_map
+            <uint64_t,
+            std::vector<uint32_t>,
+            std::hash<uint64_t>,
+            std::equal_to<uint64_t>,
+            std::allocator<std::pair<const uint64_t, vector<uint32_t>>>,
+            12>();
+
         flat_hash_map<uint64_t, uint64_t> colorsCount;
         uint64_t readID = 0, groupID = 1;
         string seqName, groupName;
