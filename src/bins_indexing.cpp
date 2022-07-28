@@ -23,6 +23,14 @@ using BINS_MAP = phmap::parallel_flat_hash_map<std::string, phmap::flat_hash_set
     12,
     std::mutex
 >;
+using LEGENDS_MAP = phmap::parallel_flat_hash_map<uint64_t,
+    std::vector<uint32_t>,
+    std::hash<uint64_t>,
+    std::equal_to<uint64_t>,
+    std::allocator<std::pair<const uint64_t, vector<uint32_t>>>,
+    6>; // 6 submaps because colors will grow
+
+using LEGENDS_MAP_OLD = phmap::parallel_flat_hash_map<uint64_t, std::vector<uint32_t>>;
 
 
 // thanks to https://stackoverflow.com/a/8615450/3371177
@@ -59,8 +67,6 @@ namespace kSpider {
 
     void bins_indexing_in_memory(string bins_dir, int selective_kSize) {
 
-        BINS_MAP bin_to_hashes;
-
         kDataFrame* frame;
         std::string dir_prefix = bins_dir.substr(bins_dir.find_last_of("/\\") + 1);
 
@@ -70,13 +76,7 @@ namespace kSpider {
         flat_hash_map<string, uint64_t> tagsMap;
         flat_hash_map<string, uint64_t> groupNameMap;
 
-        auto* legend = new phmap::parallel_flat_hash_map
-            <uint64_t,
-            std::vector<uint32_t>,
-            std::hash<uint64_t>,
-            std::equal_to<uint64_t>,
-            std::allocator<std::pair<const uint64_t, vector<uint32_t>>>,
-            12>();
+        auto* legend = new LEGENDS_MAP();
 
         flat_hash_map<uint64_t, uint64_t> colorsCount;
         uint64_t readID = 0, groupID = 1;
