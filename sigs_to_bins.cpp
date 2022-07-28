@@ -91,7 +91,7 @@ std::vector<std::string> glob2(const std::string& pattern) {
 int main(int argc, char** argv) {
 
     if (argc != 5) {
-        cout << "run: ./pairwise <sigs_directory> <kSize> <output_dir> <threads>" << endl;
+        cout << "run: ./sigs_to_bins <sigs_directory> <kSize> <output_dir> <threads>" << endl;
         exit(1);
     }
     string sigs_dir = argv[1];
@@ -127,15 +127,15 @@ int main(int argc, char** argv) {
         if (idx != std::string::npos) extension = file_name.substr(idx + 1);
         if (extension != "sig" && extension != "gz") continue;
 
-        if (file_exists(output_dir + "/" + sig_basename + ".bin")) {skipped_files++; continue;}
+        if (file_exists(output_dir + "/" + sig_basename + ".bin")) { skipped_files++; continue; }
 
         sig_names.push_back(sig_basename);
         sigs_paths.push_back(file_name);
-        
+
         total_sigs_number++;
     }
 
-    cout << "Skipped "<< skipped_files <<" files as they already converted to bins." << endl;
+    cout << "Skipped " << skipped_files << " files as they already converted to bins." << endl;
 
     int sigs_count = sigs_paths.size();
     auto begin_time = Time::now();
@@ -164,7 +164,6 @@ int main(int argc, char** argv) {
             string out_path = output_dir + "/" + sig_name + ".bin";
             phmap::BinaryOutputArchive ar_out(out_path.c_str());
             tmp_hashes.phmap_dump(ar_out);
-
         }
     }
 
