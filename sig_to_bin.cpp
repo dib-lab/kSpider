@@ -54,13 +54,15 @@ uint64_t RSJresource::as<uint64_t>(const uint64_t& def) {
 
 int main(int argc, char** argv) {
 
-    if (argc != 4) {
-        cout << "run: ./pairwise <sig> <kSize> <output_dir>" << endl;
+    if (argc != 5) {
+        cout << "run: ./sig_to_bin <sig> <kSize> <min_abundance> <output_file>" << endl;
         exit(1);
     }
+
     string sig_path = argv[1];
     int kSize = stoi(argv[2]);
-    string output_path = argv[3];
+    int min_abundance = stoi(argv[3]);
+    string output_path = argv[4];
 
     auto begin_time = Time::now();
     zstr::ifstream sig_stream(sig_path);
@@ -70,17 +72,22 @@ int main(int argc, char** argv) {
     for (int i = 0; i < number_of_sub_sigs; i++) {
         int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
         auto loaded_sig_it = sig[0]["signatures"][i]["mins"].as_array().begin();
+        auto abundance_it = sig[0]["signatures"][i]["abundances"].as_array().begin();
         if (current_kSize == kSize) {
             while (loaded_sig_it != sig[0]["signatures"][i]["mins"].as_array().end()) {
-                tmp_hashes.insert(loaded_sig_it->as<uint64_t>());
+                int abund = abundance_it->as<int>();
+                if (abund >= min_abundance)
+                    tmp_hashes.insert(loaded_sig_it->as<uint64_t>());
                 loaded_sig_it++;
+                abundance_it++;
             }
             break;
         }
     }
 
 
-    string out_path = output_path + ".bin";
+    cout << "inserted " << tmp_hashes.size() << " hashes." << endl;
+    string out_path = output_path;
     phmap::BinaryOutputArchive ar_out(out_path.c_str());
     tmp_hashes.phmap_dump(ar_out);
     cout << "Conversion done in " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
