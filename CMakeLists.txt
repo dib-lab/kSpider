@@ -11,7 +11,7 @@ project (
         VERSION 2.0.0
 )
 
-set(default_build_type "Release")
+set(default_build_type "RELEASE")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -lstdc++fs -fPIC -lgomp -lrt -fopenmp -O3 -Ofast")
 # ----------------------------------------------------------------------------
 # kProcessor Setup
@@ -31,7 +31,7 @@ include_directories(${kProcessor_INCLUDE_PATH})
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/lib/argh")
-include_directories("${PROJECT_SOURCE_DIR}/lib/json_parser")
+include_directories("${PROJECT_SOURCE_DIR}/lib/json_parser/lib/include/cpp-json")
 add_subdirectory("lib/zstr")
 
 set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap")
@@ -68,8 +68,7 @@ add_executable(sigs_to_bins sigs_to_bins.cpp)
 target_link_libraries(sigs_to_bins kSpider kProcessor z)
 
 add_executable(sig_to_bin sig_to_bin.cpp)
-target_link_libraries(sig_to_bin kSpider kProcessor z)
-
+target_link_libraries(sig_to_bin kSpider kProcessor z zstr::zstr)
 
 # add_executable(index_kframes apps/index_kframes.cpp)
 # target_link_libraries(index_kframes kSpider kProcessor z)
