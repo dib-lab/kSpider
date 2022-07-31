@@ -12,7 +12,7 @@
 #include <sstream>
 #include <string>
 #include <fstream>
-#include "json.h"
+#include "cpp-json/json.h"
 #include "zstr.hpp"
 
 // thanks to https://stackoverflow.com/a/8615450/3371177

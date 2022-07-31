@@ -4,7 +4,7 @@
 #include "parallel_hashmap/phmap.h"
 #include <ctime>
 #include <omp.h>
-#include "json.h"
+#include "cpp-json/json.h"
 #include "zstr.hpp"
 #include <glob.h>
 #include <string>

@@ -31,7 +31,7 @@ include_directories(${kProcessor_INCLUDE_PATH})
 
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/lib/argh")
-include_directories("${PROJECT_SOURCE_DIR}/lib/json_parser/lib/include/cpp-json")
+include_directories("${PROJECT_SOURCE_DIR}/lib/json_parser/lib/include/")
 add_subdirectory("lib/zstr")
 
 set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap")

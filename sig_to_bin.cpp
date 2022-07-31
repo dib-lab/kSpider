@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include "parallel_hashmap/phmap_dump.h"
 #include <cstdlib>
-#include "json.h"
+#include "cpp-json/json.h"
 #include "zstr.hpp"
 
 using namespace std;
