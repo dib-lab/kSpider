@@ -28,7 +28,7 @@ using LEGENDS_MAP = phmap::parallel_flat_hash_map<uint64_t,
     std::hash<uint64_t>,
     std::equal_to<uint64_t>,
     std::allocator<std::pair<const uint64_t, vector<uint32_t>>>,
-    6>; // 6 submaps because colors will grow
+    4>; // 6 submaps because colors will grow
 
 using LEGENDS_MAP_OLD = phmap::parallel_flat_hash_map<uint64_t, std::vector<uint32_t>>;
 
@@ -234,12 +234,13 @@ namespace kSpider {
                 }
 
                 frame->setCount(hashed_kmer, itc->second);
-                if (frame->getCount(hashed_kmer) != itc->second) {
-                    //frame->setC(kmer,itc->second);
-                    cout << "Error Founded " << hashed_kmer << " from sequence " << readName << " expected "
-                        << itc->second << " found " << frame->getCount(hashed_kmer) << endl;
-                    exit(1);
-                }
+                // no need now
+                // if (frame->getCount(hashed_kmer) != itc->second) {
+                //     //frame->setC(kmer,itc->second);
+                //     cout << "Error Founded " << hashed_kmer << " from sequence " << readName << " expected "
+                //         << itc->second << " found " << frame->getCount(hashed_kmer) << endl;
+                //     exit(1);
+                // }
             }
             readID += 1;
             groupCounter[groupName]--;
@@ -250,7 +251,9 @@ namespace kSpider {
                 }
 
             }
-            cout << "   saved_kmers(~" << frame->size() << ")." << endl << endl;
+            cout << "   saved_kmers  (~" << frame->size() << ")." << endl << endl;
+            cout << "   saved_colors (~" << legend->size() << ")." << endl << endl;
+
             // END
 
         }
