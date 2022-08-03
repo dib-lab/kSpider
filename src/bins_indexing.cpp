@@ -13,7 +13,9 @@
 #include <string>
 #include <fstream>
 #include "parallel_hashmap/phmap_dump.h"
+#include <ctime>
 
+typedef std::chrono::high_resolution_clock Time;
 
 
 using BINS_MAP = phmap::parallel_flat_hash_map<std::string, phmap::flat_hash_set<uint64_t>,
@@ -149,6 +151,8 @@ namespace kSpider {
         readID = 0;
 
         int processed_bins_count = 0;
+        auto begin_time = Time::now();
+        uint_fast64_t current_kmers_numbers = 0;
 
         // START
         for (const auto& [bin_basename, bin_path] : basename_to_path) {
@@ -168,6 +172,7 @@ namespace kSpider {
             convertMap.insert(make_pair(0, readTag));
             convertMap.insert(make_pair(readTag, readTag));
 
+            begin_time = Time::now();
             phmap::flat_hash_set<uint64_t> bin_hashes;
             phmap::BinaryInputArchive ar_in(bin_path.c_str());
             bin_hashes.phmap_load(ar_in);
@@ -251,8 +256,14 @@ namespace kSpider {
                 }
 
             }
-            cout << "   saved_kmers  (~" << frame->size() << ")." << endl << endl;
-            cout << "   saved_colors (~" << legend->size() << ")." << endl << endl;
+            auto loop_time_secs = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
+            cout << "   loaded_kmers      " << bin_hashes.size() << endl;
+            cout << "   uniq_added_kmers: " << frame->size() - current_kmers_numbers << endl;
+            cout << "   total_kmers       " << frame->size() << " | load_factor: " << frame->load_factor() << endl;
+            cout << "   total_colors      " << legend->size() << endl;
+            cout << "   loop_time:        " << loop_time_secs << " secs" << endl;
+            cout << "--------" << endl;
+            current_kmers_numbers = frame->size();
 
             // END
 
