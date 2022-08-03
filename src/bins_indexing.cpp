@@ -79,6 +79,7 @@ namespace kSpider {
         flat_hash_map<string, uint64_t> groupNameMap;
 
         auto* legend = new LEGENDS_MAP();
+        legend->reserve(colors_reserve);
 
         flat_hash_map<uint64_t, uint64_t> colorsCount;
         uint64_t readID = 0, groupID = 1;
@@ -90,6 +91,7 @@ namespace kSpider {
 
         int total_bins_number = 0;
         frame = new kDataFramePHMAP(selective_kSize, mumur_hasher);
+        frame->reserve(kmers_reserve);
 
         flat_hash_map<string, string> basename_to_path;
 
@@ -284,7 +286,7 @@ namespace kSpider {
             res->namesMapInv[iit->second] = sampleID;
         }
         cout << "saving to " << dir_prefix << " ..." << endl;
-        res->save(dir_prefix);
+        res->save(output_prefix);
     }
 
 }
