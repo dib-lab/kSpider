@@ -67,7 +67,7 @@ inline std::vector<std::string> glob2(const std::string& pattern) {
 
 namespace kSpider {
 
-    void bins_indexing_in_memory(string bins_dir, int selective_kSize) {
+    void bins_indexing(string bins_dir, int selective_kSize, string output_prefix, uint64_t kmers_reserve, uint64_t colors_reserve) {
 
         kDataFrame* frame;
         std::string dir_prefix = bins_dir.substr(bins_dir.find_last_of("/\\") + 1);
@@ -259,8 +259,8 @@ namespace kSpider {
             auto loop_time_secs = std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000;
             cout << "   loaded_kmers      " << bin_hashes.size() << endl;
             cout << "   uniq_added_kmers: " << frame->size() - current_kmers_numbers << endl;
-            cout << "   total_kmers       " << frame->size() << " | load_factor: " << frame->load_factor() << endl;
-            cout << "   total_colors      " << legend->size() << endl;
+            cout << "   total_kmers       " << frame->size() <<  " | load_factor: " << frame->load_factor() << endl;
+            cout << "   total_colors      " << legend->size() << " | load_factor: " << legend->load_factor() << endl;
             cout << "   loop_time:        " << loop_time_secs << " secs" << endl;
             cout << "--------" << endl;
             current_kmers_numbers = frame->size();
