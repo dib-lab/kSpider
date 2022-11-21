@@ -70,6 +70,9 @@ target_link_libraries(sigs_to_bins kSpider kProcessor z)
 add_executable(sig_to_bin sig_to_bin.cpp)
 target_link_libraries(sig_to_bin kSpider kProcessor z zstr::zstr)
 
+add_executable(repr_sketches apps/repr_sketches.cpp)
+target_link_libraries(repr_sketches z kProcessor)
+
 # add_executable(index_kframes apps/index_kframes.cpp)
 # target_link_libraries(index_kframes kSpider kProcessor z)
 
