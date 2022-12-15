@@ -9,7 +9,7 @@ from kSpider2.click_context import cli
 import os
 
 
-@cli.command(name="sketch", help_priority=4)
+@cli.command(name="sketch", help_priority=1)
 @click.option('-c', '--chunk-size', "chunk_size", required=False, type=click.INT, default=3000, help="chunk size")
 @click.option('-k', '--kmer-size', "kSize", required=True, type=click.IntRange(7, 31, clamp=False), help="kmer size")
 @click.option('--fastx', "fastx", type=click.Path(exists=True), help = "FASTX file path, works with interleaved paired-end and protein", required= False)
@@ -22,7 +22,7 @@ import os
 @click.pass_context
 def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_ratio, singletones):
     """
-    Sketch sequence files.
+    Sketch a FASTA/Q file. You can use sourmash if required scale >100.
     """
     
     if protein and (r1 or r2):

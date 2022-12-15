@@ -9,7 +9,7 @@ import os
 from glob import glob
 
 
-@cli.command(name="index_datasets", help_priority=5)
+@cli.command(name="index", help_priority=2) 
 @click.option('--dir', "sketches_dir", required = True, help="Sketches directory (must contain only the sketches)")
 @click.option('-k', '--kmer-size', "kSize", required=False, default = 0, type=click.INT, help="kmer size (only if using --sourmash)")
 @click.option('--sourmash', "sourmash", is_flag=True, show_default=True, default=False, help="use sourmash sigs instead of kProcessor")
