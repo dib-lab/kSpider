@@ -208,7 +208,7 @@ New help messages
 """
 
 
-@cli.command(name="cluster", help_priority=7)
+@cli.command(name="cluster", help_priority=4)
 @click.option('-c', '--cutoff', required=False, type=click.FloatRange(0, 1, clamp=False), default=0.0, show_default=True, help="cluster sequences with (containment > cutoff)")
 @click.option('-i', '--index-prefix', "index_prefix", required=True, type=click.STRING, help="Index file prefix")
 @click.pass_context

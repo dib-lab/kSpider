@@ -11,46 +11,9 @@
 #include <stdexcept>
 #include <sstream>
 #include <string>
-#include "RSJparser.tcc"
 #include <fstream>
-
-using JSON = RSJresource;
-
-// thanks to http://jsteemann.github.io/blog/2016/06/02/fastest-string-to-uint64-conversion-method/
-inline uint64_t unrolled(std::string const& value) {
-    uint64_t result = 0;
-
-    size_t const length = value.size();
-    switch (length) {
-    case 20:    result += (value[length - 20] - '0') * 10000000000000000000ULL;
-    case 19:    result += (value[length - 19] - '0') * 1000000000000000000ULL;
-    case 18:    result += (value[length - 18] - '0') * 100000000000000000ULL;
-    case 17:    result += (value[length - 17] - '0') * 10000000000000000ULL;
-    case 16:    result += (value[length - 16] - '0') * 1000000000000000ULL;
-    case 15:    result += (value[length - 15] - '0') * 100000000000000ULL;
-    case 14:    result += (value[length - 14] - '0') * 10000000000000ULL;
-    case 13:    result += (value[length - 13] - '0') * 1000000000000ULL;
-    case 12:    result += (value[length - 12] - '0') * 100000000000ULL;
-    case 11:    result += (value[length - 11] - '0') * 10000000000ULL;
-    case 10:    result += (value[length - 10] - '0') * 1000000000ULL;
-    case  9:    result += (value[length - 9] - '0') * 100000000ULL;
-    case  8:    result += (value[length - 8] - '0') * 10000000ULL;
-    case  7:    result += (value[length - 7] - '0') * 1000000ULL;
-    case  6:    result += (value[length - 6] - '0') * 100000ULL;
-    case  5:    result += (value[length - 5] - '0') * 10000ULL;
-    case  4:    result += (value[length - 4] - '0') * 1000ULL;
-    case  3:    result += (value[length - 3] - '0') * 100ULL;
-    case  2:    result += (value[length - 2] - '0') * 10ULL;
-    case  1:    result += (value[length - 1] - '0');
-    }
-    return result;
-}
-
-template<>
-uint64_t RSJresource::as<uint64_t>(const uint64_t& def) {
-    if (!exists()) return (0); // required
-    return (unrolled(data)); // example
-}
+#include "cpp-json/json.h"
+#include "zstr.hpp"
 
 // thanks to https://stackoverflow.com/a/8615450/3371177
 inline std::vector<std::string> glob2(const std::string& pattern) {
@@ -175,29 +138,29 @@ namespace kSpider {
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
             if (extension != "sig") continue;
 
-            std::ifstream sig_stream(file_name);
-            JSON sig(sig_stream);
-            int number_of_sub_sigs = sig[0]["signatures"].size();
-            string general_name = sig[0]["name"].as<std::string>();
-            if (general_name == "") {
-                std::string sig_basename = sig_prefix.substr(sig_prefix.find_last_of("/\\") + 1);
-                general_name = sig_basename;
-            }
+            zstr::ifstream sig_stream(file_name);
+            json::value json = json::parse(sig_stream);
+
+
+            auto sourmash_sig = json[0]["signatures"];
+            const json::array& sig_array = as_array(sourmash_sig);
 
 
             //START
-            for (int i = 0; i < number_of_sub_sigs; i++) {
-                int current_kSize = sig[0]["signatures"][i]["ksize"].as<int>();
-                if (current_kSize != selective_kSize) continue;
+            for (auto it = sig_array.begin(); it != sig_array.end(); ++it) {
 
-                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << general_name << " k:" << selective_kSize << " ... " << endl;
-                string md5sum = sig[0]["signatures"][i]["md5sum"].as<std::string>();
-                string sig_name = md5sum + ":" + general_name;
+                const json::value& v = *it;
+                if (v["ksize"] != selective_kSize) {
+                    continue;
+                }
+
+                cout << "Processing " << ++processed_sigs_count << "/" << total_sigs_number << " | " << sig_basename << " k:" << selective_kSize << " ... " << endl;
+
 
                 flat_hash_map<uint64_t, uint64_t> convertMap;
 
-                string readName = sig_name;
-                string groupName = general_name;
+                string readName = sig_basename;
+                string groupName = sig_basename;
 
                 uint64_t readTag = groupNameMap.find(groupName)->second;
 
@@ -206,10 +169,11 @@ namespace kSpider {
                 convertMap.insert(make_pair(0, readTag));
                 convertMap.insert(make_pair(readTag, readTag));
 
+                const json::array& mins = as_array(v["mins"]);
+                auto loaded_sig_it = mins.begin();
 
-                auto loaded_sig_it = sig[0]["signatures"][i]["mins"].as_array().begin();
-                while (loaded_sig_it != sig[0]["signatures"][i]["mins"].as_array().end()) {
-                    uint64_t hashed_kmer = loaded_sig_it->as<uint64_t>();
+                while (loaded_sig_it != mins.end()) {
+                    uint64_t hashed_kmer = json::to_number<uint64_t>(*loaded_sig_it);
                     uint64_t currentTag = frame->getCount(hashed_kmer);
                     auto itc = convertMap.find(currentTag);
                     if (itc == convertMap.end()) {
@@ -289,6 +253,9 @@ namespace kSpider {
 
                 }
                 cout << "   saved_kmers(~" << frame->size() << ")." << endl << endl;
+                cout << "   colors(~" << legend->size() << ")." << endl << endl;
+
+                break;
             }
             // END
 

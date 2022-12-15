@@ -6,4 +6,4 @@
 	url = https://github.com/adishavit/argh
 [submodule "lib/kProcessor"]
 	path = lib/kProcessor
-	url = https://github.com/dib-lab/kProcessor.git
+	url = git@github.com:dib-lab/kProcessor.git
