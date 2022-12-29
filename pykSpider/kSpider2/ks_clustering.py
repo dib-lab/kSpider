@@ -94,8 +94,8 @@ class Clusters:
         self.Logger.INFO(f"number of clusters: {len(self.connected_components)}")
         single_components = 0
         retworkx_export = self.index_prefix + f"_kSpider_graph_{self.cut_off_threshold}%.json"
-        self.Logger.INFO(f"writing {retworkx_export} and {self.output} ...")
-        rx.node_link_json(self.graph, path = retworkx_export)        
+        self.Logger.INFO(f"writing {retworkx_export}") # and {self.output} ...")
+        # rx.node_link_json(self.graph, path = retworkx_export)        
         with open(self.output, 'w') as CLUSTERS:
             for component in self.connected_components:
             # uncomment to exclude single genome clusters from exporting
