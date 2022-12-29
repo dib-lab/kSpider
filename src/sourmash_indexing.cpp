@@ -51,6 +51,7 @@ namespace kSpider {
 
         kDataFrame* frame;
         std::string dir_prefix = sigs_dir.substr(sigs_dir.find_last_of("/\\") + 1);
+        cout << "dir_prefix: " << dir_prefix << endl;
 
         flat_hash_map<string, string> namesMap;
         string names_fileName = sigs_dir;
@@ -252,7 +253,7 @@ namespace kSpider {
                     }
 
                 }
-                cout << "   saved_kmers(~" << frame->size() << ")." << endl << endl;
+                cout << "   saved_kmers(~" << frame->size() << ")." << endl;
                 cout << "   colors(~" << legend->size() << ")." << endl << endl;
 
                 break;
