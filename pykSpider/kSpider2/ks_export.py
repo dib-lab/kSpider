@@ -78,7 +78,7 @@ def main(ctx, index_prefix, newick, distance_type, overwritten_output):
     # Check for existing pairwise file
     for _file in [kSpider_pairwise_tsv, namesMap_file, seqToKmers_tsv]:
         if not os.path.exists(_file):
-            LOGGER.ERROR("File {_file} is not found.")
+            LOGGER.ERROR(f"File {_file} is not found.")
 
     """
     # Load kmer count per record
@@ -164,7 +164,7 @@ def main(ctx, index_prefix, newick, distance_type, overwritten_output):
         LOGGER.INFO(f"Writing newick to {newick_out}.")
         names = list(loaded_df.columns[1:])
         dist = loaded_df[loaded_df.columns[1:]].to_numpy()
-        Z = linkage(dist, 'complete')
+        Z = linkage(dist, 'single')
         tree = to_tree(Z, False)
 
         newick = get_newick(tree, tree.dist, names)
