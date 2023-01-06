@@ -176,6 +176,7 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
 from setuptools.command.build_py import build_py
@@ -204,6 +205,8 @@ setup(name='kSpider',
           'pandas', 
           'scipy',
           'numpy',
+          'rustworkx',
+          'tqdm'
       ],
       include_package_data=True,
       entry_points='''

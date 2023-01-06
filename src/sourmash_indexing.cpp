@@ -50,7 +50,15 @@ namespace kSpider {
     void sourmash_sigs_indexing(string sigs_dir, int selective_kSize) {
 
         kDataFrame* frame;
+        while (sigs_dir.size() > 0 && sigs_dir[sigs_dir.size() - 1] == '/') sigs_dir.erase(sigs_dir.size() - 1, 1);
+        
         std::string dir_prefix = sigs_dir.substr(sigs_dir.find_last_of("/\\") + 1);
+
+        while (dir_prefix.size() > 0 && dir_prefix[dir_prefix.size() - 1] == '/') {
+            dir_prefix.erase(dir_prefix.size() - 1, 1);
+        }
+
+        cout << "dir_prefix: " << dir_prefix << endl;
 
         flat_hash_map<string, string> namesMap;
         string names_fileName = sigs_dir;
@@ -252,7 +260,7 @@ namespace kSpider {
                     }
 
                 }
-                cout << "   saved_kmers(~" << frame->size() << ")." << endl << endl;
+                cout << "   saved_kmers(~" << frame->size() << ")." << endl;
                 cout << "   colors(~" << legend->size() << ")." << endl << endl;
 
                 break;

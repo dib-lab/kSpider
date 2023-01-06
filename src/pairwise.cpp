@@ -188,13 +188,31 @@ namespace kSpider {
 
         std::ofstream myfile;
         myfile.open(index_prefix + "_kSpider_pairwise.tsv");
-        myfile << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\n';
+        myfile
+            << "source_1"
+            << "\tsource_2"
+            << "\tshared_kmers"
+            << "\tmin_containment"
+            << "\tavg_containment"
+            << "\tmax_containment"
+            << '\n';
         uint64_t line_count = 0;
         for (const auto& edge : edges) {
-            float max_containment = (float)edge.second / min(groupID_to_kmerCount[edge.first.first], groupID_to_kmerCount[edge.first.second]);
-            myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\n';
+            float cont_1_in_2 = (float)edge.second / groupID_to_kmerCount[edge.first.second];
+            float cont_2_in_1 = (float)edge.second / groupID_to_kmerCount[edge.first.first];
+            float min_containment = min(cont_1_in_2, cont_2_in_1);
+            float avg_containment = (cont_1_in_2 + cont_2_in_1) / 2.0;
+            float max_containment = max(cont_1_in_2, cont_2_in_1);
+
+            myfile
+                << edge.first.first
+                << '\t' << edge.first.second
+                << '\t' << edge.second
+                << '\t' << min_containment
+                << '\t' << avg_containment
+                << '\t' << max_containment
+                << '\n';
         }
         myfile.close();
-
     }
 }

@@ -40,23 +40,45 @@ def get_newick(node, parent_dist, leaf_names, newick='') -> str:
 
 @cli.command(name="export", help_priority=5)
 @click.option('-i', '--index-prefix', required=True, type=click.STRING, help="Index file prefix")
-@click.option('--dist-mat', "distance_matrix", is_flag=True, help="Convert pairwise matrix to NxN distance matrix", default=False)
+# @click.option('--dist-mat', "distance_matrix", is_flag=True, help="Convert pairwise matrix to NxN distance matrix", default=False)
 @click.option('--newick', "newick", is_flag=True, help="Convert pairwise (containment) matrix to newick format", default=False)
-@click.option('--containment', "containment", is_flag=True, help="Use max %containment instead of number of kmers", default=True)
+@click.option('-d', '--dist-type', "distance_type", required=False, default="max_cont", show_default=True, type=click.STRING, help="select from ['min_containment', 'avg_containment', 'max_containment', 'ani']")
+@click.option('-o', "overwritten_output", default="na", required=False, type=click.STRING, help="custom output file name prefix")
 @click.pass_context
-def main(ctx, index_prefix, containment, newick, distance_matrix):
+def main(ctx, index_prefix, newick, distance_type, overwritten_output):
     """
     Export kSpider pairwise to multiple formats.
     """
-
+    
     index_basename = os.path.basename(index_prefix)
     kSpider_pairwise_tsv = f"{index_prefix}_kSpider_pairwise.tsv"
     namesMap_file = f"{index_prefix}.namesMap"
     seqToKmers_tsv = f"{index_prefix}_kSpider_seqToKmersNo.tsv"
+    
+    LOGGER = ctx.obj
+    
+    distance_to_col = {
+        "min_cont": 3,
+        "avg_cont": 4,
+        "max_cont": 5,
+        "ani": 99
+    }
+    
+    if distance_type not in distance_to_col:
+        LOGGER.ERROR("unknown distance!")
+    
+    dist_col = distance_to_col[distance_type]
+    if dist_col == "ani":
+        with open(kSpider_pairwise_tsv, 'r') as pairwise_tsv:
+            if "ani" not in next(pairwise_tsv).lower():
+                LOGGER.ERROR("ANI was selected but was not found in the pairwise file.\nPlease, run kSpider pairwise --extend_with_ani -i <index_prefix> script")
+    
+    
+    
     # Check for existing pairwise file
     for _file in [kSpider_pairwise_tsv, namesMap_file, seqToKmers_tsv]:
         if not os.path.exists(_file):
-            ctx.obj.ERROR("File {_file} is not found.")
+            LOGGER.ERROR(f"File {_file} is not found.")
 
     """
     # Load kmer count per record
@@ -83,59 +105,70 @@ def main(ctx, index_prefix, containment, newick, distance_matrix):
 
     """Parse kSpider's pairwise
     """
+    
     distances = dict()
     labeled_out = f"kSpider_{index_basename}_pairwise.tsv"
     distmatrix_out = f"kSpider_{index_basename}_distmat.tsv"
     newick_out = f"kSpider_{index_basename}.newick"
+    
+    if overwritten_output != "na":
+        labeled_out = f"{overwritten_output}_pairwise.tsv"
+        distmatrix_out = f"{overwritten_output}_distmat.tsv"
+        newick_out = f"{overwritten_output}.newick"
+    
+    if distance_type == "ani":
+        with open(kSpider_pairwise_tsv) as PAIRWISE, open(labeled_out, 'w') as NEW, open(index_prefix + "_kSpider_pairwise.ani_col.tsv") as ANI:
+            ctx.obj.INFO(f"Writing pairwise matrix to {labeled_out}")
+            NEW.write(f"grp1\tgrp2\t{distance_type}\n")
+            # Skip header
+            next(PAIRWISE)
+            next(ANI)
+            for line in PAIRWISE:
+                line = (line.strip().split('\t'))
+                origin_grp1 = line[0]
+                origin_grp2 = line[1]
+                grp1 = namesMap_dict[origin_grp1]
+                grp2 = namesMap_dict[origin_grp2]
+                dist_metric = float(next(ANI).strip())
+                distances[(grp1, grp2)] = dist_metric
+                NEW.write(f"{grp1}\t{grp2}\t{dist_metric}\n")
+                
+    else:
+        with open(kSpider_pairwise_tsv) as PAIRWISE, open(labeled_out, 'w') as NEW:
+            ctx.obj.INFO(f"Writing pairwise matrix to {labeled_out}")
+            NEW.write(f"grp1\tgrp2\t{distance_type}\n")
+            # Skip header
+            next(PAIRWISE)
+            for line in PAIRWISE:
+                line = (line.strip().split('\t'))
+                origin_grp1 = line[0]
+                origin_grp2 = line[1]
+                grp1 = namesMap_dict[origin_grp1]
+                grp2 = namesMap_dict[origin_grp2]
+                dist_metric = float(line[dist_col])
+                distances[(grp1, grp2)] = dist_metric
+                NEW.write(f"{grp1}\t{grp2}\t{dist_metric}\n")
 
-    with open(kSpider_pairwise_tsv) as PAIRWISE, open(labeled_out, 'w') as NEW:
-        # Skip header
-        third_column = "shared_kmers" if not containment else "max_containment"
-        ctx.obj.INFO(f"Writing pairwise matrix to {labeled_out}")
-        NEW.write(f"grp1\tgrp2\t{third_column}\n")
-        next(PAIRWISE)
-        for line in PAIRWISE:
-            line = (line.strip().split('\t')[1:])
-            origin_grp1 = line[0]
-            origin_grp2 = line[1]
-            shared_kmers = int(line[2])
-            grp1 = namesMap_dict[origin_grp1]
-            grp2 = namesMap_dict[origin_grp2]
-            min_seq = float(
-                min(seq_to_kmers[origin_grp1], seq_to_kmers[origin_grp2]))
-            max_containment = (shared_kmers / min_seq)
-            value = shared_kmers
-            if containment:
-                value = max_containment
-            if distance_matrix or newick:
-                distances[(grp1, grp2)] = max_containment
+    unique_ids = sorted(set([x for y in distances.keys() for x in y]))
+    df = pd.DataFrame(index=unique_ids, columns=unique_ids)
+    for k, v in distances.items():
+        df.loc[k[0], k[1]] = 1-v
+        df.loc[k[1], k[0]] = 1-v
 
-            NEW.write(f"{grp1}\t{grp2}\t{value}\n")
+    df = df.fillna(0)
+    LOGGER.INFO(f"Writing distance matrix to {distmatrix_out}")
+    df.to_csv(distmatrix_out, sep='\t')
+        
+    if newick:
+        loaded_df = pd.read_csv(distmatrix_out, sep='\t')
+        LOGGER.INFO(f"Writing newick to {newick_out}.")
+        names = list(loaded_df.columns[1:])
+        dist = loaded_df[loaded_df.columns[1:]].to_numpy()
+        Z = linkage(dist, 'single')
+        tree = to_tree(Z, False)
 
-    if distance_matrix or newick:
-        unique_ids = sorted(set([x for y in distances.keys() for x in y]))
-        df = pd.DataFrame(index=unique_ids, columns=unique_ids)
-        for k, v in distances.items():
-            df.loc[k[0], k[1]] = 1-v
-            df.loc[k[1], k[0]] = 1-v
+        newick = get_newick(tree, tree.dist, names)
+        with open(newick_out, 'w') as NW:
+            NW.write(newick)
 
-        df = df.fillna(0)
-        if distance_matrix:
-            ctx.obj.INFO(f"Writing distance matrix to {distmatrix_out}")
-            df.to_csv(distmatrix_out, sep='\t')
-        if newick:
-            if not distance_matrix:
-                df.to_csv(distmatrix_out, sep='\t')
-            loaded_df = pd.read_csv(distmatrix_out, sep='\t')
-            # os.remove(distmatrix_out)
-            ctx.obj.INFO(f"Writing newick to {newick_out}.")
-            names = list(loaded_df.columns[1:])
-            dist = loaded_df[loaded_df.columns[1:]].to_numpy()
-            Z = linkage(dist, 'complete')
-            tree = to_tree(Z, False)
-
-            newick = get_newick(tree, tree.dist, names)
-            with open(newick_out, 'w') as NW:
-                NW.write(newick)
-
-    ctx.obj.SUCCESS("Done.")
+    LOGGER.SUCCESS("Done.")
