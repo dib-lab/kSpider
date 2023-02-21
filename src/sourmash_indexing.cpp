@@ -79,6 +79,9 @@ namespace kSpider {
         int total_sigs_number = 0;
         frame = new kDataFramePHMAP(selective_kSize, mumur_hasher);
 
+        flat_hash_map<string, uint32_t> groupName_to_kmerCount;
+
+
         for (const auto& dirEntry : glob2(sigs_dir + "/*")) {
             string file_name = (string)dirEntry;
             size_t lastindex = file_name.find_last_of(".");
@@ -181,6 +184,8 @@ namespace kSpider {
 
                 const json::array& mins = as_array(v["mins"]);
                 auto loaded_sig_it = mins.begin();
+                groupName_to_kmerCount[groupName] = mins.size();
+
 
                 while (loaded_sig_it != mins.end()) {
                     uint64_t hashed_kmer = json::to_number<uint64_t>(*loaded_sig_it);
@@ -271,15 +276,27 @@ namespace kSpider {
 
         }
 
-        // Dump color->sources
 
+        string output_prefix = dir_prefix;
+        
+        // Dump kmer count
+        flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
+        for(auto & [groupName, kmerCount] : groupName_to_kmerCount){
+            groupID_to_kmerCount[groupNameMap[groupName]] = kmerCount;
+        }
+
+        phmap::BinaryOutputArchive ar_out(string(output_prefix + "_groupID_to_kmerCount.bin").c_str());
+        groupID_to_kmerCount.phmap_dump(ar_out);
+        
+
+        // Dump color->sources
         auto color_to_sources = new phmap::flat_hash_map<uint64_t, phmap::flat_hash_set<uint32_t>>();
         for (auto it : *legend) {
             phmap::flat_hash_set<uint32_t> tmp(std::make_move_iterator(it.second.begin()), std::make_move_iterator(it.second.end()));
             color_to_sources->operator[](it.first) = tmp;
         }
 
-        string output_prefix = dir_prefix;
+        
         phmap::BinaryOutputArchive ar_out_1(string(output_prefix + "_color_to_sources.bin").c_str());
         ar_out_1.saveBinary(color_to_sources->size());
         for (auto& [k, v] : *color_to_sources)

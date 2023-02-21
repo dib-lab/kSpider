@@ -184,6 +184,7 @@ namespace kSpider {
         int __batch_count = 0;
 
         int processed_kfs_count = 0;
+        flat_hash_map<string, uint32_t> groupName_to_kmerCount;
 
         for (const auto& dirEntry : glob(kfs_dir + "/*")) {
             string file_name = (string)dirEntry;
@@ -223,6 +224,7 @@ namespace kSpider {
             auto loaded_kf_it = loaded_kf->begin();
 
                 string groupName = kf_basename;
+                groupName_to_kmerCount[groupName] = loaded_kf->size();
 
                 uint64_t readTag = groupNameMap.find(groupName)->second;
 
@@ -328,6 +330,17 @@ namespace kSpider {
                 delete loaded_kf;
         }
 
+        string output_prefix = dir_prefix;
+        
+        // Dump kmer count
+        flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
+        for(auto & [groupName, kmerCount] : groupName_to_kmerCount){
+            groupID_to_kmerCount[groupNameMap[groupName]] = kmerCount;
+        }
+
+        phmap::BinaryOutputArchive ar_out(string(output_prefix + "_groupID_to_kmerCount.bin").c_str());
+        groupID_to_kmerCount.phmap_dump(ar_out);
+
 
         // Dump color->sources
 
@@ -337,7 +350,6 @@ namespace kSpider {
             color_to_sources->operator[](it.first) = tmp;
         }
 
-        string output_prefix = dir_prefix;
         phmap::BinaryOutputArchive ar_out_1(string(output_prefix + "_color_to_sources.bin").c_str());
         ar_out_1.saveBinary(color_to_sources->size());
         for (auto& [k, v] : *color_to_sources)

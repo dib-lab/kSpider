@@ -154,13 +154,21 @@ namespace kSpider {
 
         cout << "parsing index colors: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
         begin_time = Time::now();
+        
+        // for (const auto& record : color_to_ids) {
+        //     uint32_t colorCount = colorsCount[record.first];
+        //     for (auto group_id : record.second) {
+        //         groupID_to_kmerCount[group_id] += colorCount;
+        //     }
+        // }
+
+        // Loading kmer counts
         flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
-        for (const auto& record : color_to_ids) {
-            uint32_t colorCount = colorsCount[record.first];
-            for (auto group_id : record.second) {
-                groupID_to_kmerCount[group_id] += colorCount;
-            }
-        }
+        string _file_id_to_kmer_count = index_prefix + "_groupID_to_kmerCount.bin";
+        phmap::BinaryInputArchive ar_in_kmer_count(_file_id_to_kmer_count.c_str());
+        groupID_to_kmerCount.phmap_load(ar_in_kmer_count);
+        assert(groupID_to_kmerCount.size());
+
 
         std::ofstream fstream_kmerCount;
         fstream_kmerCount.open(index_prefix + "_kSpider_seqToKmersNo.tsv");
@@ -171,6 +179,8 @@ namespace kSpider {
         }
         fstream_kmerCount.close();
         cout << "kmer counting: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
+
+        // Loading done
 
         begin_time = Time::now();
         clock_t begin_detailed_pairwise_comb, begin_detailed_pairwise_edges, begin_detailed_pairwise_edges_insertion;
