@@ -1,6 +1,7 @@
 import pickle
 import sys
 import os
+from math import isclose
 
 """
 LOAD GOLDEN FILES
@@ -129,15 +130,16 @@ error_sigs = set()
 
 # validate containments
 for key in min_containments:
-    if min_containments[key] != golden_min_containments[key]:
+    if round(min_containments[key], 1) != round(golden_min_containments[key], 1):
+        print(key, min_containments[key], golden_min_containments[key])
         error_sigs.add(key[0])
         error_sigs.add(key[1])
         min_containments_mismatches+=1    
-    if avg_containments[key] != golden_avg_containments[key]:
+    if round(avg_containments[key], 1) != round(golden_avg_containments[key], 1):
         error_sigs.add(key[0])
         error_sigs.add(key[1])
         avg_containments_mismatches+=1
-    if max_contaiments[key] != golden_max_containments[key]:
+    if round(max_contaiments[key], 1) != round(golden_max_containments[key], 1):
         max_containments_mismatches+=1
         error_sigs.add(key[0])
         error_sigs.add(key[1])

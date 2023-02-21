@@ -96,3 +96,9 @@ with open('golden_max_containments.pickle', 'wb') as handle:
 
 with open('golden_avg_containments.pickle', 'wb') as handle:
     pickle.dump(avg_containments, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+
+# max_containments to tsv file
+with open('golden_max_containments.tsv', 'w') as f:
+    for key, value in max_containments.items():
+        f.write(f"{key[0]}\t{key[1]}\t{value}")
