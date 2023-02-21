@@ -1,5 +1,6 @@
 import pickle
 import sys
+import os
 
 """
 LOAD GOLDEN FILES
@@ -70,6 +71,7 @@ with open('sigs_kSpider_pairwise.tsv') as R:
         min_containments[key] = min_containment
         avg_containments[key] = avg_containment
         max_contaiments[key] = max_containment
+        pairwise[key] = shared_kmers
 
 print("Loading kSpider's files completed")
 
@@ -87,12 +89,15 @@ else:
 VALIDATING PAIRWISE golden_pairwise
 """
 
+shared_kmers_mismatches = 0
 for sig_pair, shared_kmers in pairwise.items():
     if shared_kmers != golden_pairwise[sig_pair]:
-        print(f"ERROR! {sig_pair} shared_kmers missmatch", file = sys.stderr)
+        shared_kmers_mismatches += 1
+
+if shared_kmers_mismatches:
+    print(f"ERROR! {shared_kmers_mismatches} shared_kmers missmatch", file = sys.stderr)
 else:
     print("pairwise validation passed")
-
 
 """
 VALIDATING containments
@@ -112,15 +117,22 @@ if lengths_missmatch:
 min_containments_mismatches = 0
 avg_containments_mismatches = 0
 max_containments_mismatches = 0
+error_sigs = set()
 
 # validate containments
 for key in min_containments:
     if min_containments[key] != golden_min_containments[key]:
+        error_sigs.add(key[0])
+        error_sigs.add(key[1])
         min_containments_mismatches+=1    
     if avg_containments[key] != golden_avg_containments[key]:
+        error_sigs.add(key[0])
+        error_sigs.add(key[1])
         avg_containments_mismatches+=1
     if max_contaiments[key] != golden_max_containments[key]:
         max_containments_mismatches+=1
+        error_sigs.add(key[0])
+        error_sigs.add(key[1])
         
 if min_containments_mismatches:
     print(f"ERROR! {min_containments_mismatches} min containments missmatch", file = sys.stderr)
@@ -128,3 +140,17 @@ if avg_containments_mismatches:
     print(f"ERROR! {avg_containments_mismatches} avg containments missmatch", file = sys.stderr)
 if max_containments_mismatches:
     print(f"ERROR! {max_containments_mismatches} max containments missmatch", file = sys.stderr)
+
+SUBSET_SIGS = False
+
+if SUBSET_SIGS:
+    # delete directory if exists
+    if os.path.exists("subset_sigs"):
+        os.rmdir("subset_sigs")
+    
+    os.mkdir("subset_sigs/")
+        
+    for sig in error_sigs:
+        sig_file = f"sigs/{sig}.sig"
+        # copy sig file to subset_sigs
+        os.system(f"cp {sig_file} subset_sigs")
