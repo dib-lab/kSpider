@@ -37,7 +37,7 @@ def main(ctx, index_prefix, user_threads, ani, sourmash_scale):
         ctx.obj.INFO(f"Estimating the ANI. This might take some time if the data is very large.")
         
         if user_threads > 1:
-            ctx.obj.WARNING("sorry, current ANI estimation does not allow multithreading")
+            ctx.obj.WARNING("sorry, current ANI estimation implementation does not allow multithreading")
             
         if not sourmash_scale:
             ctx.obj.ERROR("estimating ANI requires to provide --scale value")

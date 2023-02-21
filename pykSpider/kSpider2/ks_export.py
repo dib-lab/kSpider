@@ -119,7 +119,7 @@ def main(ctx, index_prefix, newick, distance_type, overwritten_output):
     if distance_type == "ani":
         with open(kSpider_pairwise_tsv) as PAIRWISE, open(labeled_out, 'w') as NEW, open(index_prefix + "_kSpider_pairwise.ani_col.tsv") as ANI:
             ctx.obj.INFO(f"Writing pairwise matrix to {labeled_out}")
-            NEW.write(f"grp1\tgrp2\t{distance_type}\n")
+            NEW.write(f"source1\tsource2\t{distance_type}\n")
             # Skip header
             next(PAIRWISE)
             next(ANI)

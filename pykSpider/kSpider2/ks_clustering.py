@@ -76,10 +76,7 @@ class Clusters:
                         seq2 = int(row[1]) - 1
 
                         line = next(ani_col_file)
-                        line = float(line.strip()) * 100.0
-
-                        # distance = float(.strip()) * 100
-                        distance = 1
+                        distance = float(line.strip()) * 100.0
 
                         # don't make graph edge
                         if distance < self.cut_off_threshold:
