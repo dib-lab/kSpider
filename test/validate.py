@@ -6,6 +6,10 @@ import os
 LOAD GOLDEN FILES
 """
 
+def count_lines_in_file(file_name):
+    with open(file_name) as R:
+        return sum(1 for _ in R)
+
 with open('golden_pairwise.pickle', 'rb') as handle:
     golden_pairwise = pickle.load(handle)
     
@@ -56,6 +60,10 @@ avg_containments = {}
 max_contaiments = {}
 pairwise = {}
 kSpider_compare_sets = {}
+
+if count_lines_in_file('sigs_kSpider_pairwise.tsv') < 100:
+    print("ERROR! pairwise file is empty", file = sys.stderr)
+    sys.exit(1)
 
 with open('sigs_kSpider_pairwise.tsv') as R:
     next(R)
