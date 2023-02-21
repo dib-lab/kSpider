@@ -301,6 +301,14 @@ namespace kSpider {
         }
         namesMapOut.close();
 
+        // Write extra info
+        ofstream file(output_prefix + ".extra");
+        file << selective_kSize << endl;
+        file << frame->KD->hash_mode << endl;
+        file << frame->KD->slicing_mode << endl;
+        file << frame->KD->params_to_string() << endl;
+        file.close();
+
         // ------- Pause serializing index for now.
         /*
 

@@ -103,9 +103,9 @@ namespace kSpider {
             uint64_t k;
             phmap::flat_hash_set<uint32_t> v;
             vector<uint32_t> vVec;
-            set_to_vector(v, vVec);
             ar_in.loadBinary(&k);
             ar_in.loadBinary(&v);
+            set_to_vector(v, vVec);
             map->insert_or_assign(std::move(k), std::move(vVec));
         }
     }
@@ -134,8 +134,8 @@ namespace kSpider {
 
         begin_time = Time::now();
         int_int_map colorsCount;
-
         load_colors_count(index_prefix + "_color_count.bin", colorsCount);
+        
 
         // TODO: should be csv, rename later.
         // std::ifstream data(index_prefix + "_kSpider_colorCount.tsv");

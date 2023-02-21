@@ -101,6 +101,7 @@ namespace kSpider {
         flat_hash_map<string, uint64_t> groupCounter;
 
         int total_kfs_number = 0;
+        int detected_kSize;
 
         // get kSize and type
          for (const auto& dirEntry : glob(kfs_dir + "/*")) {
@@ -111,7 +112,7 @@ namespace kSpider {
             idx = file_name.rfind('.');
             std::string extension = "";
             if(idx != std::string::npos) extension = file_name.substr(idx+1);
-            int detected_kSize;
+            
             hashingModes _hm;
             if(extension == "mqf" || extension == "phmap") {
                 auto * _kf = kDataFrame::load(kf_prefix);
@@ -363,6 +364,14 @@ namespace kSpider {
             namesMapOut<<it.first<<" "<<it.second<<endl;
         }
         namesMapOut.close();
+
+        // Write extra info
+        ofstream file(output_prefix + ".extra");
+        file << detected_kSize << endl;
+        file << frame->KD->hash_mode << endl;
+        file << frame->KD->slicing_mode << endl;
+        file << frame->KD->params_to_string() << endl;
+        file.close();
 
 
         // ------- Pause serializing index for now.
