@@ -34,7 +34,7 @@ include_directories("${PROJECT_SOURCE_DIR}/lib/argh")
 include_directories("${PROJECT_SOURCE_DIR}/lib/json_parser/lib/include/")
 add_subdirectory("lib/zstr")
 
-set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/kProcessor/ThirdParty/kmerDecoder/lib/parallel-hashmap")
+set(PHMAP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/lib/parallel-hashmap")
 include_directories("${PHMAP_INCLUDE_DIRS}")
 
 add_library(kSpider STATIC src/pairwise.cpp src/index.cpp src/fastx_to_kf.cpp src/sourmash_indexing.cpp src/bins_indexing.cpp ${PROJECT_SOURCE_DIR}/lib/kProcessor/include/kProcessor)
