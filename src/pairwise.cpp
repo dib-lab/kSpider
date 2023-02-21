@@ -219,11 +219,19 @@ namespace kSpider {
 
                     auto _p = make_pair(_seq1, _seq2);
                     uint32_t ccount = colorsCount[item.first];
-                    edges.lazy_emplace_l(_p,
-                        [ccount](PAIRS_COUNTER::value_type& v) { v.second++; },           // called only when key was already present
-                        [_p, ccount](const PAIRS_COUNTER::constructor& ctor) {
-                            ctor(_p, ccount); }
-                    ); // construct value_type in place when key not present 
+                    edges.try_emplace_l(_p,
+                        [ccount](PAIRS_COUNTER::value_type& v) { v.second += ccount; },           // called only when key was already present
+                        ccount
+                    );
+                    
+                    // ** BUG FIX ** was creating wrong shared_kmers
+                    // auto _p = make_pair(_seq1, _seq2);
+                    // uint32_t ccount = colorsCount[item.first];
+                    // edges.lazy_emplace_l(_p,
+                    //     [ccount](PAIRS_COUNTER::value_type& v) { v.second++; },           // called only when key was already present
+                    //     [_p, ccount](const PAIRS_COUNTER::constructor& ctor) {
+                    //         ctor(_p, ccount); }
+                    // ); // construct value_type in place when key not present 
                 }
             }
         }
