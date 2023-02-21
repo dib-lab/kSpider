@@ -292,12 +292,6 @@ namespace kSpider {
         phmap::BinaryOutputArchive ar_out_3(string(output_prefix + "_color_count.bin").c_str());
         colorsCount.phmap_dump(ar_out_3);
 
-
-        colorTable* colors = new intVectorsTable();
-        for (auto it : *legend) {
-            colors->setColor(it.first, it.second);
-        }
-
         // export namesMap
         ofstream namesMapOut(output_prefix + ".namesMap");
         namesMapOut<<namesMap.size()<<endl;
@@ -309,6 +303,12 @@ namespace kSpider {
 
         // ------- Pause serializing index for now.
         /*
+
+        colorTable* colors = new intVectorsTable();
+        for (auto it : *legend) {
+            colors->setColor(it.first, it.second);
+        }
+
         colored_kDataFrame* res = new colored_kDataFrame();
         res->setColorTable(colors);
         res->setkDataFrame(frame);
