@@ -14,6 +14,8 @@
 #include <fstream>
 #include "cpp-json/json.h"
 #include "zstr.hpp"
+#include "parallel_hashmap/phmap.h"
+#include "parallel_hashmap/phmap_dump.h"
 
 // thanks to https://stackoverflow.com/a/8615450/3371177
 inline std::vector<std::string> glob2(const std::string& pattern) {
@@ -269,12 +271,44 @@ namespace kSpider {
 
         }
 
+        // Dump color->sources
+
+        auto color_to_sources = new phmap::flat_hash_map<uint64_t, phmap::flat_hash_set<uint32_t>>();
+        for (auto it : *legend) {
+            phmap::flat_hash_set<uint32_t> tmp(std::make_move_iterator(it.second.begin()), std::make_move_iterator(it.second.end()));
+            color_to_sources->operator[](it.first) = tmp;
+        }
+
+        string output_prefix = dir_prefix;
+        phmap::BinaryOutputArchive ar_out_1(string(output_prefix + "_color_to_sources.bin").c_str());
+        ar_out_1.saveBinary(color_to_sources->size());
+        for (auto& [k, v] : *color_to_sources)
+        {
+            ar_out_1.saveBinary(k);
+            ar_out_1.saveBinary(v);
+        }
+
+        // Dump colors count
+        phmap::BinaryOutputArchive ar_out_3(string(output_prefix + "_color_count.bin").c_str());
+        colorsCount.phmap_dump(ar_out_3);
+
 
         colorTable* colors = new intVectorsTable();
         for (auto it : *legend) {
             colors->setColor(it.first, it.second);
         }
 
+        // export namesMap
+        ofstream namesMapOut(output_prefix + ".namesMap");
+        namesMapOut<<namesMap.size()<<endl;
+        for(auto it:namesMap)
+        {
+            namesMapOut<<it.first<<" "<<it.second<<endl;
+        }
+        namesMapOut.close();
+
+        // ------- Pause serializing index for now.
+        /*
         colored_kDataFrame* res = new colored_kDataFrame();
         res->setColorTable(colors);
         res->setkDataFrame(frame);
@@ -285,6 +319,9 @@ namespace kSpider {
         }
         cout << "saving to " << dir_prefix << " ..." << endl;
         res->save(dir_prefix);
+        */
+        // ------ END Pause serializing index for now.
+        
     }
 
 }
