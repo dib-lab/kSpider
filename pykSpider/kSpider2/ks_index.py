@@ -25,7 +25,7 @@ def validate_names(ctx, names_file):
                     f"invalid names line detected at L{i}: '{line.strip()}'")
 
 
-@cli.command(name="index_kmers", help_priority=1)
+@cli.command(name="index_kmers", help_priority=1, hidden=True)
 @click.option('-f', '--fasta', "fasta_file", required=True, type=click.Path(exists=True), help="FASTA file")
 @click.option('-n', '--names', "names_file", required=True, type=click.Path(exists=True), help="Names file")
 @click.option('-k', '--kmer-size', "kSize", required=True, type=click.IntRange(7, 31, clamp=False), help="kmer size")
@@ -55,7 +55,7 @@ def kmers(ctx, fasta_file, names_file, kSize, output_prefix, chunk_size, strand_
     ctx.obj.SUCCESS("Indexing has completed.")
 
 
-@cli.command(name="index_skipmers", help_priority=2)
+@cli.command(name="index_skipmers", help_priority=2, hidden=True)
 @click.option('-f', '--fasta', "fasta_file", required=True, type=click.Path(exists=True), help="FASTA file")
 @click.option('-n', '--names', "names_file", required=True, type=click.Path(exists=True), help="Names file")
 @click.option('-k', '--kmer-size', "skipmers_kSize", required=True, type=click.INT, help="kmer size")
@@ -85,7 +85,7 @@ def skipmers(ctx, fasta_file, names_file, skipmers_kSize, skipmers_m, skipmers_n
     ctx.obj.SUCCESS("Indexing has completed.")
 
 
-@cli.command(name="index_protein", help_priority=3)
+@cli.command(name="index_protein", help_priority=3, hidden=True)
 @click.option('-f', '--fasta', "fasta_file", required=True, type=click.Path(exists=True), help="FASTA file")
 @click.option('-n', '--names', "names_file", required=True, type=click.Path(exists=True), help="Names file")
 @click.option('-k', '--kmer-size', "kSize", required=True, type=click.IntRange(7, 31, clamp=False), help="kmer size")

@@ -25,6 +25,9 @@ def main(ctx, fastx, r1, r2, chunk_size, kSize, protein, dayhoff, downsampling_r
     Sketch a FASTA/Q file. You can use sourmash if required scale >100.
     """
     
+    if downsampling_ratio > 100:
+        ctx.obj.WARNING("We recommmend to use sourmash sketching for scale >100.")
+    
     if protein and (r1 or r2):
         ctx.obj.ERROR("Protein can't be paired-end.")
     

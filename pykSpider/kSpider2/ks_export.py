@@ -42,7 +42,7 @@ def get_newick(node, parent_dist, leaf_names, newick='') -> str:
 @click.option('-i', '--index-prefix', required=True, type=click.STRING, help="Index file prefix")
 # @click.option('--dist-mat', "distance_matrix", is_flag=True, help="Convert pairwise matrix to NxN distance matrix", default=False)
 @click.option('--newick', "newick", is_flag=True, help="Convert pairwise (containment) matrix to newick format", default=False)
-@click.option('-d', '--dist-type', "distance_type", required=False, default="max_cont", show_default=True, type=click.STRING, help="select from ['min_containment', 'avg_containment', 'max_containment', 'ani']")
+@click.option('-d', '--dist-type', "distance_type", required=False, default="max_cont", show_default=True, type=click.STRING, help="select from ['min_cont', 'avg_cont', 'max_cont', 'ani']")
 @click.option('-o', "overwritten_output", default="na", required=False, type=click.STRING, help="custom output file name prefix")
 @click.pass_context
 def main(ctx, index_prefix, newick, distance_type, overwritten_output):
@@ -119,7 +119,7 @@ def main(ctx, index_prefix, newick, distance_type, overwritten_output):
     if distance_type == "ani":
         with open(kSpider_pairwise_tsv) as PAIRWISE, open(labeled_out, 'w') as NEW, open(index_prefix + "_kSpider_pairwise.ani_col.tsv") as ANI:
             ctx.obj.INFO(f"Writing pairwise matrix to {labeled_out}")
-            NEW.write(f"grp1\tgrp2\t{distance_type}\n")
+            NEW.write(f"source1\tsource2\t{distance_type}\n")
             # Skip header
             next(PAIRWISE)
             next(ANI)

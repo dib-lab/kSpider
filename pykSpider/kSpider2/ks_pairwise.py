@@ -5,6 +5,7 @@ import sys
 import _kSpider_internal as kSpider_internal
 import click
 from kSpider2.click_context import cli
+import os
 
 
 
@@ -21,11 +22,22 @@ def main(ctx, index_prefix, user_threads, ani, sourmash_scale):
     if not ani:
         ctx.obj.INFO(
             f"Constructing the containment pairwise matrix using {user_threads} cores.")
+        if sourmash_scale:
+            ctx.obj.WARNING("No need to provide -s/--scale when running this command.")
         kSpider_internal.pairwise(index_prefix, user_threads)
         ctx.obj.SUCCESS("Done.")
-    else:
+    else:        
+        pairwise_file = index_prefix + "_kSpider_pairwise.tsv"
+        ani_col = index_prefix + "_kSpider_pairwise.ani_col.tsv"
+        seqToKmers_tsv = f"{index_prefix}_kSpider_seqToKmersNo.tsv"
+        
+        if not os.path.exists(pairwise_file):
+            ctx.obj.ERROR(f"Please, run the same command without --estimate-ani first, then run this command.")
+        
+        ctx.obj.INFO(f"Estimating the ANI. This might take some time if the data is very large.")
+        
         if user_threads > 1:
-            ctx.obj.WARNING("sorry, current ANI estimation does not allow multithreading")
+            ctx.obj.WARNING("sorry, current ANI estimation implementation does not allow multithreading")
             
         if not sourmash_scale:
             ctx.obj.ERROR("estimating ANI requires to provide --scale value")
@@ -35,11 +47,7 @@ def main(ctx, index_prefix, user_threads, ani, sourmash_scale):
         with open(f"{index_prefix}.extra") as extra:
             kSize = int(next(extra))
         
-        from sourmash.distance_utils import containment_to_distance
-        pairwise_file = index_prefix + "_kSpider_pairwise.tsv"
-        ani_col = index_prefix + "_kSpider_pairwise.ani_col.tsv"
-        seqToKmers_tsv = f"{index_prefix}_kSpider_seqToKmersNo.tsv"
-        
+        from sourmash.distance_utils import containment_to_distance    
         
         """
         # Load kmer count per record
@@ -59,8 +67,6 @@ def main(ctx, index_prefix, user_threads, ani, sourmash_scale):
             for or_line in PAIRWISE:
                 line = or_line.strip().split('\t')
                 shared_kmers = int(line[2])
-                if shared_kmers < 5:
-                    continue
                 id_1 = int(line[0])
                 id_2 = int(line[1])
                 min_containment = float(line[3])
@@ -75,4 +81,5 @@ def main(ctx, index_prefix, user_threads, ani, sourmash_scale):
                 new_line = f"{avg_ani}\n"
                 ANI_COL.write(new_line)
 
+        ctx.obj.SUCCESS("Done.")
         

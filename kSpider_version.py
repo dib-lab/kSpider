@@ -3,6 +3,8 @@ import json
 import urllib.request
 import sys
 
+#TODO there are two files with kSpider_version, remove one.
+
 # Only update this when releasing stable
 MAJOR = 2
 MINOR = 3

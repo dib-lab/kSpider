@@ -11,6 +11,8 @@
 #include <stdexcept>
 #include <sstream>
 #include <string.h>
+#include "parallel_hashmap/phmap.h"
+#include "parallel_hashmap/phmap_dump.h"
 
 #define LOWEST_PERCENTILE 5
 
@@ -99,6 +101,7 @@ namespace kSpider {
         flat_hash_map<string, uint64_t> groupCounter;
 
         int total_kfs_number = 0;
+        int detected_kSize;
 
         // get kSize and type
          for (const auto& dirEntry : glob(kfs_dir + "/*")) {
@@ -109,7 +112,7 @@ namespace kSpider {
             idx = file_name.rfind('.');
             std::string extension = "";
             if(idx != std::string::npos) extension = file_name.substr(idx+1);
-            int detected_kSize;
+            
             hashingModes _hm;
             if(extension == "mqf" || extension == "phmap") {
                 auto * _kf = kDataFrame::load(kf_prefix);
@@ -181,6 +184,7 @@ namespace kSpider {
         int __batch_count = 0;
 
         int processed_kfs_count = 0;
+        flat_hash_map<string, uint32_t> groupName_to_kmerCount;
 
         for (const auto& dirEntry : glob(kfs_dir + "/*")) {
             string file_name = (string)dirEntry;
@@ -220,6 +224,7 @@ namespace kSpider {
             auto loaded_kf_it = loaded_kf->begin();
 
                 string groupName = kf_basename;
+                groupName_to_kmerCount[groupName] = loaded_kf->size();
 
                 uint64_t readTag = groupNameMap.find(groupName)->second;
 
@@ -325,6 +330,64 @@ namespace kSpider {
                 delete loaded_kf;
         }
 
+        string output_prefix = dir_prefix;
+        
+        // Dump kmer count
+        flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
+        for(auto & [groupName, kmerCount] : groupName_to_kmerCount){
+            groupID_to_kmerCount[groupNameMap[groupName]] = kmerCount;
+        }
+
+        phmap::BinaryOutputArchive ar_out(string(output_prefix + "_groupID_to_kmerCount.bin").c_str());
+        groupID_to_kmerCount.phmap_dump(ar_out);
+
+
+        // Dump color->sources
+
+        auto color_to_sources = new phmap::flat_hash_map<uint64_t, phmap::flat_hash_set<uint32_t>>();
+        for (auto it : *legend) {
+            phmap::flat_hash_set<uint32_t> tmp(std::make_move_iterator(it.second.begin()), std::make_move_iterator(it.second.end()));
+            color_to_sources->operator[](it.first) = tmp;
+        }
+
+        phmap::BinaryOutputArchive ar_out_1(string(output_prefix + "_color_to_sources.bin").c_str());
+        ar_out_1.saveBinary(color_to_sources->size());
+        for (auto& [k, v] : *color_to_sources)
+        {
+            ar_out_1.saveBinary(k);
+            ar_out_1.saveBinary(v);
+        }
+
+        // Dump colors count
+        phmap::BinaryOutputArchive ar_out_3(string(output_prefix + "_color_count.bin").c_str());
+        colorsCount.phmap_dump(ar_out_3);
+
+
+        colorTable* colors = new intVectorsTable();
+        for (auto it : *legend) {
+            colors->setColor(it.first, it.second);
+        }
+
+        // export namesMap
+        ofstream namesMapOut(output_prefix + ".namesMap");
+        namesMapOut<<namesMap.size()<<endl;
+        for(auto it:namesMap)
+        {
+            namesMapOut<<groupNameMap[it.second]<<" "<<it.second<<endl;
+        }
+        namesMapOut.close();
+
+        // Write extra info
+        ofstream file(output_prefix + ".extra");
+        file << detected_kSize << endl;
+        file << frame->KD->hash_mode << endl;
+        file << frame->KD->slicing_mode << endl;
+        file << frame->KD->params_to_string() << endl;
+        file.close();
+
+
+        // ------- Pause serializing index for now.
+        /*
 
         colorTable* colors = new intVectorsTable();
         for (auto it : *legend) {
@@ -341,6 +404,8 @@ namespace kSpider {
         }
         cout << "saving to "<< dir_prefix << " ..." << endl;
         res->save(dir_prefix);
+        */
+        // ------ END Pause serializing index for now.
     }
 
 }
