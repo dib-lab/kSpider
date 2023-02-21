@@ -297,7 +297,7 @@ namespace kSpider {
         namesMapOut<<namesMap.size()<<endl;
         for(auto it:namesMap)
         {
-            namesMapOut<<it.first<<" "<<it.second<<endl;
+            namesMapOut<<groupNameMap[it.second]<<" "<<it.second<<endl;
         }
         namesMapOut.close();
 
