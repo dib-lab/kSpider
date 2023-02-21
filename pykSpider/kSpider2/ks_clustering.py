@@ -69,11 +69,17 @@ class Clusters:
             next(pairwise_tsv)  # skip header
             if self.dist_type == "ani":
                 with open(self.index_prefix + "_kSpider_pairwise.ani_col.tsv") as ani_col_file:
+                    next(ani_col_file) # skip header
                     for row in pairwise_tsv:
                         row = row.strip().split('\t')
                         seq1 = int(row[0]) - 1
                         seq2 = int(row[1]) - 1
-                        distance = float(next(ani_col_file).strip()) * 100
+
+                        line = next(ani_col_file)
+                        line = float(line.strip()) * 100.0
+
+                        # distance = float(.strip()) * 100
+                        distance = 1
 
                         # don't make graph edge
                         if distance < self.cut_off_threshold:
