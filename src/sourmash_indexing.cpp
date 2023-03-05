@@ -53,7 +53,7 @@ namespace kSpider {
 
         kDataFrame* frame;
         while (sigs_dir.size() > 0 && sigs_dir[sigs_dir.size() - 1] == '/') sigs_dir.erase(sigs_dir.size() - 1, 1);
-        
+
         std::string dir_prefix = sigs_dir.substr(sigs_dir.find_last_of("/\\") + 1);
 
         while (dir_prefix.size() > 0 && dir_prefix[dir_prefix.size() - 1] == '/') {
@@ -155,7 +155,25 @@ namespace kSpider {
             json::value json = json::parse(sig_stream);
 
 
-            auto sourmash_sig = json[0]["signatures"];
+            // select sig based on kSize
+            int selected_sig_id = -1;
+            for (int sig_no = 0; sig_no < json.size(); sig_no++) {
+                json::array& sig_array = as_array(json[sig_no]["signatures"]);
+                for (auto it = sig_array.begin(); it != sig_array.end(); ++it) {
+                    const json::value& v = *it;
+                    if (v["ksize"] == selective_kSize) {
+                        selected_sig_id = sig_no;
+                        break;
+                    }
+                }
+            }
+            if(selected_sig_id == -1){
+                cerr << "ERROR: No signature found for kSize: " << selective_kSize << endl;
+                exit(1);
+            }
+
+
+            auto sourmash_sig = json[selected_sig_id]["signatures"];
             const json::array& sig_array = as_array(sourmash_sig);
 
 
@@ -278,16 +296,16 @@ namespace kSpider {
 
 
         string output_prefix = dir_prefix;
-        
+
         // Dump kmer count
         flat_hash_map<uint32_t, uint32_t> groupID_to_kmerCount;
-        for(auto & [groupName, kmerCount] : groupName_to_kmerCount){
+        for (auto& [groupName, kmerCount] : groupName_to_kmerCount) {
             groupID_to_kmerCount[groupNameMap[groupName]] = kmerCount;
         }
 
         phmap::BinaryOutputArchive ar_out(string(output_prefix + "_groupID_to_kmerCount.bin").c_str());
         groupID_to_kmerCount.phmap_dump(ar_out);
-        
+
 
         // Dump color->sources
         auto color_to_sources = new phmap::flat_hash_map<uint64_t, phmap::flat_hash_set<uint32_t>>();
@@ -296,7 +314,7 @@ namespace kSpider {
             color_to_sources->operator[](it.first) = tmp;
         }
 
-        
+
         phmap::BinaryOutputArchive ar_out_1(string(output_prefix + "_color_to_sources.bin").c_str());
         ar_out_1.saveBinary(color_to_sources->size());
         for (auto& [k, v] : *color_to_sources)
@@ -311,10 +329,10 @@ namespace kSpider {
 
         // export namesMap
         ofstream namesMapOut(output_prefix + ".namesMap");
-        namesMapOut<<namesMap.size()<<endl;
-        for(auto it:namesMap)
+        namesMapOut << namesMap.size() << endl;
+        for (auto it : namesMap)
         {
-            namesMapOut<<groupNameMap[it.second]<<" "<<it.second<<endl;
+            namesMapOut << groupNameMap[it.second] << " " << it.second << endl;
         }
         namesMapOut.close();
 
@@ -346,7 +364,7 @@ namespace kSpider {
         res->save(dir_prefix);
         */
         // ------ END Pause serializing index for now.
-        
+
     }
 
 }
