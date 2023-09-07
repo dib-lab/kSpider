@@ -24,7 +24,7 @@ def main(ctx, index_prefix, user_threads, ani, sourmash_scale):
             f"Constructing the containment pairwise matrix using {user_threads} cores.")
         if sourmash_scale:
             ctx.obj.WARNING("No need to provide -s/--scale when running this command.")
-        kSpider_internal.pairwise(index_prefix, user_threads)
+        kSpider_internal.pairwise(index_prefix, user_threads, sourmash_scale) 
         ctx.obj.SUCCESS("Done.")
     else:        
         pairwise_file = index_prefix + "_kSpider_pairwise.tsv"

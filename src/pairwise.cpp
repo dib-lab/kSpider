@@ -9,6 +9,7 @@
 #include "parallel_hashmap/phmap.h"
 #include "parallel_hashmap/phmap_dump.h"
 #include <cassert>
+#include <math.h>
 
 using boost::adaptors::transformed;
 using boost::algorithm::join;
@@ -45,6 +46,7 @@ public:
 
     void combinations(int n) {
         this->combs.clear();
+        this->combs.reserve((n * (n - 1)) / 2);
         this->comb(n, this->r, this->arr);
     }
 
@@ -92,7 +94,7 @@ namespace kSpider {
         }
     }
 
-    void load_colors_to_sources(const std::string& filename, int_vec_map * map)
+    void load_colors_to_sources(const std::string& filename, int_vec_map* map)
     {
         phmap::BinaryInputArchive ar_in(filename.c_str());
         size_t size;
@@ -120,7 +122,7 @@ namespace kSpider {
         }
     }
 
-    void pairwise(string index_prefix, int user_threads) {
+    void pairwise(string index_prefix, int user_threads, int scale) {
 
         // Read colors
 
@@ -135,7 +137,7 @@ namespace kSpider {
         begin_time = Time::now();
         int_int_map colorsCount;
         load_colors_count(index_prefix + "_color_count.bin", colorsCount);
-        
+
 
         // TODO: should be csv, rename later.
         // std::ifstream data(index_prefix + "_kSpider_colorCount.tsv");
@@ -154,7 +156,7 @@ namespace kSpider {
 
         cout << "parsing index colors: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
         begin_time = Time::now();
-        
+
         // for (const auto& record : color_to_ids) {
         //     uint32_t colorCount = colorsCount[record.first];
         //     for (auto group_id : record.second) {
@@ -211,7 +213,6 @@ namespace kSpider {
                 Combo combo = Combo();
                 combo.combinations(item.second.size());
                 for (uint32_t i = 0; i < combo.combs.size(); i++) {
-                    // for (auto const& seq_pair : combo.combs) {
                     auto const& seq_pair = combo.combs[i];
                     uint32_t _seq1 = item.second[seq_pair.first];
                     uint32_t _seq2 = item.second[seq_pair.second];
@@ -223,20 +224,14 @@ namespace kSpider {
                         [ccount](PAIRS_COUNTER::value_type& v) { v.second += ccount; },           // called only when key was already present
                         ccount
                     );
-                    
-                    // ** BUG FIX ** was creating wrong shared_kmers
-                    // auto _p = make_pair(_seq1, _seq2);
-                    // uint32_t ccount = colorsCount[item.first];
-                    // edges.lazy_emplace_l(_p,
-                    //     [ccount](PAIRS_COUNTER::value_type& v) { v.second++; },           // called only when key was already present
-                    //     [_p, ccount](const PAIRS_COUNTER::constructor& ctor) {
-                    //         ctor(_p, ccount); }
-                    // ); // construct value_type in place when key not present 
                 }
             }
         }
 
+
+
         cout << "pairwise hashmap construction: " << std::chrono::duration<double, std::milli>(Time::now() - begin_time).count() / 1000 << " secs" << endl;
+        cout << "Number of pairwise comparisons: " << edges.size() << endl;
         cout << "writing pairwise matrix to " << index_prefix << "_kSpider_pairwise.tsv" << endl;
 
         std::ofstream myfile;
@@ -248,29 +243,56 @@ namespace kSpider {
             << "\tmin_containment"
             << "\tavg_containment"
             << "\tmax_containment"
+            << "\tochiai"
+            << "\tjaccard"
+            << "\tbeta_ani"
             << '\n';
         uint64_t line_count = 0;
         for (const auto& edge : edges) {
-            uint64_t shared_kmers = edge.second;
+            float shared_kmers = static_cast<float>(edge.second);
             uint32_t source_1 = edge.first.first;
             uint32_t source_2 = edge.first.second;
             uint32_t source_1_kmers = groupID_to_kmerCount[source_1];
             uint32_t source_2_kmers = groupID_to_kmerCount[source_2];
 
-            float cont_1_in_2 = (float)shared_kmers / source_2_kmers;
-            float cont_2_in_1 = (float)shared_kmers / source_1_kmers;
+            // containments
+            float cont_1_in_2 = shared_kmers / source_2_kmers;
+            float cont_2_in_1 = shared_kmers / source_1_kmers;
             float min_containment = min(cont_1_in_2, cont_2_in_1);
-            float avg_containment = (cont_1_in_2 + cont_2_in_1) / 2.0;
+            float avg_containment = (cont_1_in_2 + cont_2_in_1) / 2.0f;
             float max_containment = max(cont_1_in_2, cont_2_in_1);
 
-            myfile
-                << source_1
-                << '\t' << source_2
-                << '\t' << shared_kmers
+            // Ochiai distance
+            float ochiai = (shared_kmers / sqrt((float)source_1_kmers * (float)source_2_kmers));
+
+            // Jaccard distance (if size of samples is roughly similar)
+            // J(A, B) = 1 - |A ∩ B| / (|A| + |B| - |A ∩ B|)
+            float jaccard = shared_kmers / (source_1_kmers + source_2_kmers - shared_kmers);
+
+            // Kulczynski distance needs abundance of each sample
+            // float kulczynski = (float)shared_kmers / (source_1_kmers + source_2_kmers) * 2;
+
+            // my ANI
+            float ani = 0.0;
+            if (scale) {
+                double avg_length = ((source_1_kmers + source_2_kmers) / 2.0) * scale;
+                ani = (2.0 * shared_kmers) / (source_1_kmers + source_2_kmers - (2.0 * shared_kmers / avg_length));
+            }
+
+            // Prepare the output string
+            std::stringstream line;
+            line << edge.first.first
+                << '\t' << edge.first.second
+                << '\t' << edge.second
                 << '\t' << min_containment
                 << '\t' << avg_containment
                 << '\t' << max_containment
-                << '\n';
+                << '\t' << ochiai
+                << '\t' << jaccard;
+            if (scale) line << '\t' << ani;
+            line << '\n';
+            myfile << line.str();
+
         }
         myfile.close();
     }

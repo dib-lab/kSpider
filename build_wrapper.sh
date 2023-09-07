@@ -28,7 +28,7 @@ cleanup
 
 # Build the project if not already built
 BUILD_DIR="build"
-[[ -d ${BUILD_DIR} ]] || cmake -Bbuild && cmake --build build -j4
+[[ -d ${BUILD_DIR} ]] || cmake -Bbuild && cmake --build build -j32
 
 
 echo "BDIST WHEEL"

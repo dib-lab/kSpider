@@ -149,7 +149,9 @@ namespace kSpider {
             idx = file_name.rfind('.');
             std::string extension = "";
             if (idx != std::string::npos) extension = file_name.substr(idx + 1);
-            if (extension != "sig") continue;
+            if (extension != "sig"){
+                cerr << "Skipping file: " << file_name << ", must end with .sig even if compressed." << endl;
+            };
 
             zstr::ifstream sig_stream(file_name);
             json::value json = json::parse(sig_stream);
@@ -167,9 +169,8 @@ namespace kSpider {
                     }
                 }
             }
-            if(selected_sig_id == -1){
-                cerr << "ERROR: No signature found for kSize: " << selective_kSize << endl;
-                exit(1);
+            if (selected_sig_id == -1) {
+                throw std::runtime_error("No signature found for kSize: " + std::to_string(selective_kSize));
             }
 
 
@@ -217,55 +218,111 @@ namespace kSpider {
                             sort(colors.begin(), colors.end());
                         }
 
-                        string colorsString = to_string(colors[0]);
-                        for (int k = 1; k < colors.size(); k++) {
-                            colorsString += ";" + to_string(colors[k]);
+
+                        // [OPTIMIZE] [TODO] Optimize colors concatenation
+                        // string colorsString = to_string(colors[0]);
+                        // for (int k = 1; k < colors.size(); k++) {
+                        //     colorsString += ";" + to_string(colors[k]);
+                        // }
+
+                        std::stringstream ss;
+                        if (!colors.empty()) {
+                            ss << colors[0];
+                            for (size_t k = 1; k < colors.size(); ++k) {
+                                ss << ";" << colors[k];
+                            }
                         }
+                        std::string colorsString = ss.str();
+                        // END [OPTIMIZE] [TODO] Optimize colors concatenation
+
 
                         auto itTag = tagsMap.find(colorsString);
+
+                        // START [OPTIMIZE] [TODO] Optimize
+                        // if (itTag == tagsMap.end()) {
+                        //     uint64_t newColor;
+                        //     if (freeColors.size() == 0) {
+                        //         newColor = groupID++;
+                        //     }
+                        //     else {
+                        //         newColor = freeColors.top();
+                        //         freeColors.pop();
+                        //     }
+                        //     tagsMap.insert(make_pair(colorsString, newColor));
+                        //     legend->insert(make_pair(newColor, colors));
+                        //     itTag = tagsMap.find(colorsString);
+                        //     colorsCount[newColor] = 0;
+                        // }
+
                         if (itTag == tagsMap.end()) {
                             uint64_t newColor;
-                            if (freeColors.size() == 0) {
-                                newColor = groupID++;
-                            }
+                            if (freeColors.empty()) newColor = groupID++;
                             else {
                                 newColor = freeColors.top();
                                 freeColors.pop();
                             }
-
-                            tagsMap.insert(make_pair(colorsString, newColor));
-                            legend->insert(make_pair(newColor, colors));
-                            itTag = tagsMap.find(colorsString);
+                            auto inserted = tagsMap.emplace(colorsString, newColor);
+                            legend->emplace(newColor, colors);
+                            itTag = inserted.first;
                             colorsCount[newColor] = 0;
                         }
+                        // END [OPTIMIZE] [TODO] Optimize
                         uint64_t newColor = itTag->second;
 
-                        convertMap.insert(make_pair(currentTag, newColor));
+                        convertMap.emplace(currentTag, newColor);
                         itc = convertMap.find(currentTag);
                     }
+                    // START [OPTIMIZE] [TODO] Optimize
+                    // if (itc->second != currentTag) {
+
+                    //     colorsCount[currentTag]--;
+                    //     if (colorsCount[currentTag] == 0 && currentTag != 0) {
+
+                    //         auto _invGroupNameIT = inv_groupNameMap.find(currentTag);
+                    //         if (_invGroupNameIT == inv_groupNameMap.end()) {
+                    //             freeColors.push(currentTag);
+                    //             vector<uint32_t> colors = legend->find(currentTag)->second;
+                    //             string colorsString = to_string(colors[0]);
+                    //             for (unsigned int k = 1; k < colors.size(); k++) {
+                    //                 colorsString += ";" + to_string(colors[k]);
+                    //             }
+                    //             tagsMap.erase(colorsString);
+                    //             legend->erase(currentTag);
+                    //             if (convertMap.find(currentTag) != convertMap.end())
+                    //                 convertMap.erase(currentTag);
+                    //         }
+
+                    //     }
+                    //     colorsCount[itc->second]++;
+                    // }
 
                     if (itc->second != currentTag) {
-
-                        colorsCount[currentTag]--;
+                        --colorsCount[currentTag];
                         if (colorsCount[currentTag] == 0 && currentTag != 0) {
-
                             auto _invGroupNameIT = inv_groupNameMap.find(currentTag);
                             if (_invGroupNameIT == inv_groupNameMap.end()) {
                                 freeColors.push(currentTag);
-                                vector<uint32_t> colors = legend->find(currentTag)->second;
-                                string colorsString = to_string(colors[0]);
+                                auto legendIt = legend->find(currentTag);
+                                std::vector<uint32_t> colors = legendIt->second;
+                                std::stringstream ss;
+                                ss << colors[0];
                                 for (unsigned int k = 1; k < colors.size(); k++) {
-                                    colorsString += ";" + to_string(colors[k]);
+                                    ss << ";" << colors[k];
                                 }
+                                std::string colorsString = ss.str();
                                 tagsMap.erase(colorsString);
-                                legend->erase(currentTag);
-                                if (convertMap.find(currentTag) != convertMap.end())
-                                    convertMap.erase(currentTag);
+                                legend->erase(legendIt);
+                                auto convertMapIt = convertMap.find(currentTag);
+                                if (convertMapIt != convertMap.end()) {
+                                    convertMap.erase(convertMapIt);
+                                }
                             }
-
                         }
-                        colorsCount[itc->second]++;
+                        ++colorsCount[itc->second];
                     }
+
+                    // END [OPTIMIZE] [TODO] Optimize
+
 
                     frame->setCount(hashed_kmer, itc->second);
                     if (frame->getCount(hashed_kmer) != itc->second) {
@@ -294,6 +351,9 @@ namespace kSpider {
 
         }
 
+        cerr << "Indexing done..." << endl;
+        cerr << "Total number of colors: " << legend->size() << endl;
+
 
         string output_prefix = dir_prefix;
 
@@ -306,13 +366,57 @@ namespace kSpider {
         phmap::BinaryOutputArchive ar_out(string(output_prefix + "_groupID_to_kmerCount.bin").c_str());
         groupID_to_kmerCount.phmap_dump(ar_out);
 
+        // write legend in csv
+        ofstream legend_file;
+        legend_file.open(output_prefix + "_legend.csv");
+        legend_file << "color,groupIDs" << endl;
+        cout << "Legend size: " << legend->size() << endl;
+        for (auto it : *legend) {
+            legend_file << it.first << ",";
+            for (auto it2 : it.second) {
+                legend_file << it2 << ";";
+            }
+            legend_file << endl;
+        }
+        legend_file.close();
 
-        // Dump color->sources
+        // Write color sizes
+        ofstream color_sizes_file;
+        color_sizes_file.open(output_prefix + "_color_sizes.csv");
+        color_sizes_file << "color,size" << endl;
+        for (auto it : *legend) {
+            color_sizes_file << it.first << "," << it.second.size() << endl;
+        }
+        color_sizes_file.close();
+
+        // write color counts
+        ofstream color_counts_file;
+        color_counts_file.open(output_prefix + "_color_counts.csv");
+        color_counts_file << "color,count" << endl;
+        for (auto it : colorsCount) {
+            color_counts_file << it.first << "," << it.second << endl;
+        }
+        color_counts_file.close();
+        
+
+
+       // Dump color->sources
+        double average_color_size = 0;
+        double color_size_standard_deviation = 0;
         auto color_to_sources = new phmap::flat_hash_map<uint64_t, phmap::flat_hash_set<uint32_t>>();
         for (auto it : *legend) {
+            if (colorsCount[it.first] == 0) continue;
+            color_size_standard_deviation += pow(it.second.size() - average_color_size, 2);
+            average_color_size += it.second.size();
             phmap::flat_hash_set<uint32_t> tmp(std::make_move_iterator(it.second.begin()), std::make_move_iterator(it.second.end()));
             color_to_sources->operator[](it.first) = tmp;
         }
+        average_color_size /= legend->size();
+        color_size_standard_deviation /= legend->size();
+        color_size_standard_deviation = sqrt(color_size_standard_deviation);
+        cerr << "Total selected colors: " << color_to_sources->size() << endl;
+        cerr << "Average color size: " << average_color_size << endl;
+        cerr << "Color size standard deviation: " << color_size_standard_deviation << endl;
 
 
         phmap::BinaryOutputArchive ar_out_1(string(output_prefix + "_color_to_sources.bin").c_str());
@@ -342,6 +446,7 @@ namespace kSpider {
         file << frame->KD->hash_mode << endl;
         file << frame->KD->slicing_mode << endl;
         file << frame->KD->params_to_string() << endl;
+        file << "features:" << frame->getkSize() << endl;
         file.close();
 
         // ------- Pause serializing index for now.

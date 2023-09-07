@@ -33,6 +33,20 @@ int main(int argc, char** argv) {
     auto begin_time = Time::now();
     zstr::ifstream sig_stream(sig_path);
     json::value json = json::parse(sig_stream);
+
+    int selected_sig = -1;
+    for (int sig_no = 0; sig_no < json.size(); sig_no++) {
+        json::array& sig_array = as_array(json[sig_no]["signatures"]);
+        for (auto it = sig_array.begin(); it != sig_array.end(); ++it) {
+            const json::value& v = *it;
+            if (v["ksize"] == kSize) {
+                selected_sig = sig_no;
+                break;
+            }
+        }
+    }
+
+
     auto sourmash_sig = json[0]["signatures"];
     const json::array& sig_array = as_array(sourmash_sig);
     for (auto it = sig_array.begin(); it != sig_array.end(); ++it) {

@@ -1,5 +1,5 @@
 #include "kSpider.hpp"
 
 int main(int argc, char** argv) {
-    kSpider::pairwise(argv[1], stoi(argv[2]));
+    kSpider::pairwise(argv[1], stoi(argv[2]), stod(argv[3]));
 }

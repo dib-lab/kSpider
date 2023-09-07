@@ -13,7 +13,10 @@ class Clusters:
         "min_cont": 3,
         "avg_cont": 4,
         "max_cont": 5,
-        "ani": 6,
+        "ochiai": 6,
+        "jaccard": 7,
+        "beta_ani": 8,
+        "ani": 9,
     }
 
     seq_to_kmers = dict()
@@ -150,7 +153,7 @@ New help messages
 @cli.command(name="cluster", help_priority=4)
 @click.option('-c', '--cutoff', required=False, type=click.FloatRange(0, 1, clamp=False), default=0.0, show_default=True, help="cluster sequences with (containment > cutoff)")
 @click.option('-i', '--index-prefix', "index_prefix", required=True, type=click.STRING, help="Index file prefix")
-@click.option('-d', '--dist-type', "distance_type", required=False, default="max_cont", show_default=True, type=click.STRING, help="select from ['min_containment', 'avg_containment', 'max_containment', 'ani']")
+@click.option('-d', '--dist-type', "distance_type", required=False, default="max_cont", show_default=True, type=click.STRING, help="select from ['min_containment', 'avg_containment', 'max_containment', 'ani', 'ochiai', 'jaccard', 'beta_ani]")
 @click.pass_context
 def main(ctx, index_prefix, cutoff, distance_type):
     """Sequence clustering."""

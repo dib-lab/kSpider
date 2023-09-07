@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
             uint64_t from_node = stoi(parts[0]);
             uint64_t to_node = stoi(parts[1]);
             count[from_node]++;
+            -
             count[to_node]++;
         }
 
@@ -41,4 +42,8 @@ int main(int argc, char** argv) {
     for (auto& [k, v] : elems) {
         cout << k << ": " << v << endl;
     }
+
+    
+
+
 }
