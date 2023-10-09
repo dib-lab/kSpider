@@ -92,7 +92,9 @@ namespace kSpider {
 
         begin_time = Time::now();
         int_int_map colorsCount;
-        auto* kf = kDataFrame::load(index_prefix);
+        auto* ckf = colored_kDataFrame::load(index_prefix);
+        auto namesmap = ckf->names_map();
+        auto * kf = ckf->getkDataFrame();
         auto it = kf->begin();
         while (it != kf->end()) {
             colorsCount[it.getCount()]++;
@@ -100,6 +102,7 @@ namespace kSpider {
         }
         // Free some memory
         delete kf;
+        delete ckf;
 
 
         // TODO: should be csv, rename later.
@@ -187,14 +190,20 @@ namespace kSpider {
         cout << "writing pairwise matrix to " << index_prefix << "_kSpider_pairwise.tsv" << endl;
 
         std::ofstream myfile;
+        std::ofstream myfile2;
+
         myfile.open(index_prefix + "_kSpider_pairwise.tsv");
+        myfile2.open(index_prefix + "_kSpider_pairwise_named.tsv");
         myfile << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\n';
+        myfile2 << "bin_1" << '\t' << "bin_2" << '\t' << "shared_kmers" << '\t' << "max_containment" << '\n';
         uint64_t line_count = 0;
         for (const auto& edge : edges) {
             float max_containment = (float)edge.second / min(groupID_to_kmerCount[edge.first.first], groupID_to_kmerCount[edge.first.second]);
             myfile << edge.first.first << '\t' << edge.first.second << '\t' << edge.second << '\t' << max_containment << '\n';
+            myfile2 << namesmap[edge.first.first] << '\t' << namesmap[edge.first.second] << '\t' << edge.second << '\t' << max_containment << '\n';
+
         }
         myfile.close();
-
+        myfile2.close();
     }
 }
